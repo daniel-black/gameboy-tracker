@@ -2,10 +2,10 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "..";
 
 export interface Pattern {
-  pulse1: Array<any>;
-  pulse2: Array<any>;
-  wave: Array<any>;
-  noise: Array<any>;
+  pulse1: Array<Row>;
+  pulse2: Array<Row>;
+  wave: Array<Row>;
+  noise: Array<Row>;
 }
 
 export type Channel = keyof Pattern;
@@ -38,13 +38,26 @@ function getDefaultPattern(): Pattern {
   };
 }
 
-function getDefaultRow(): any {
+// temporary type. going to make actual ones soon.
+type Row = {
+  note: number;
+  volume: number;
+  effect: number;
+};
+
+function getDefaultRow(): Row {
   return {
     note: 0,
     volume: 0,
     effect: 0,
   };
 }
+
+type RowIdentifier = {
+  patternIndex: number;
+  channel: Channel;
+  rowIndex: number;
+};
 
 export const songSlice = createSlice({
   name: "song",
@@ -65,17 +78,26 @@ export const songSlice = createSlice({
     setPatterns: (state, action: PayloadAction<Song["patterns"]>) => {
       state.patterns = action.payload;
     },
-    setChannelRowInPattern: (
+    setRowNote: (
       state,
-      action: PayloadAction<{
-        patternIndex: number;
-        channel: Channel;
-        rowIndex: number;
-        newRow: { note: number; volume: number; effect: number };
-      }>
+      action: PayloadAction<RowIdentifier & { note: number }>
     ) => {
-      const { patternIndex, channel, rowIndex, newRow } = action.payload;
-      state.patterns[patternIndex][channel][rowIndex] = newRow;
+      const { patternIndex, channel, rowIndex, note } = action.payload;
+      state.patterns[patternIndex][channel][rowIndex].note = note;
+    },
+    setRowVolume: (
+      state,
+      action: PayloadAction<RowIdentifier & { volume: number }>
+    ) => {
+      const { patternIndex, channel, rowIndex, volume } = action.payload;
+      state.patterns[patternIndex][channel][rowIndex].volume = volume;
+    },
+    setRowEffect: (
+      state,
+      action: PayloadAction<RowIdentifier & { effect: number }>
+    ) => {
+      const { patternIndex, channel, rowIndex, effect } = action.payload;
+      state.patterns[patternIndex][channel][rowIndex].effect = effect;
     },
   },
 });
@@ -85,7 +107,9 @@ export const {
   setBeatsPerMinute,
   setOrderList,
   setPatterns,
-  setChannelRowInPattern,
+  setRowNote,
+  setRowVolume,
+  setRowEffect,
 } = songSlice.actions;
 
 export const selectSongName = (state: RootState) => state.song.name;
