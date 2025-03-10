@@ -1,14 +1,15 @@
+import "./app.css";
 import { Bpm } from "./components/bpm";
 import { EditBpm } from "./components/edit-bpm";
 import { EditSongName } from "./components/edit-song-name";
 import { Pattern } from "./components/pattern";
 import { SongName } from "./components/song-name";
-import "./app.css";
 import { Patterns } from "./components/patterns";
+import { Play } from "./components/play";
 
 export function App() {
   return (
-    <div>
+    <div className="font-mono">
       <p>this is the app</p>
       <SongName />
       <EditSongName />
@@ -18,7 +19,8 @@ export function App() {
       <hr />
       <Patterns />
       <hr />
-      <Pattern patternIndex={0} />
+      <Play />
+      <Pattern />
     </div>
   );
 }

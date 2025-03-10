@@ -1,14 +1,8 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "..";
-
-export interface Pattern {
-  pulse1: Array<Row>;
-  pulse2: Array<Row>;
-  wave: Array<Row>;
-  noise: Array<Row>;
-}
-
-export type Channel = keyof Pattern;
+import { Channel, createDefaultPattern, Pattern } from "../../audio/patterns";
+import { Note } from "../../audio/notes";
+import { VolumeLevel } from "../../audio/volume";
 
 export interface Song {
   name: string | undefined;
@@ -25,34 +19,10 @@ const initialState: Song = {
   beatsPerMinute: 120,
   orderList: [0],
   currentPatternIndex: 0,
-  patterns: [getDefaultPattern()],
+  patterns: [createDefaultPattern()],
   isPlaying: false,
   currentPlaybackRow: 0,
 };
-
-function getDefaultPattern(): Pattern {
-  return {
-    pulse1: new Array(64).fill(getDefaultRow()),
-    pulse2: new Array(64).fill(getDefaultRow()),
-    wave: new Array(64).fill(getDefaultRow()),
-    noise: new Array(64).fill(getDefaultRow()),
-  };
-}
-
-// temporary type. going to make actual ones soon.
-type Row = {
-  note: number;
-  volume: number;
-  effect: number;
-};
-
-function getDefaultRow(): Row {
-  return {
-    note: 0,
-    volume: 0,
-    effect: 0,
-  };
-}
 
 type RowIdentifier = {
   patternIndex: number;
@@ -76,11 +46,8 @@ export const songSlice = createSlice({
     setOrderList: (state, action: PayloadAction<Song["orderList"]>) => {
       state.orderList = action.payload;
     },
-    setPatterns: (state, action: PayloadAction<Song["patterns"]>) => {
-      state.patterns = action.payload;
-    },
     addPattern: (state) => {
-      state.patterns.push(getDefaultPattern());
+      state.patterns.push(createDefaultPattern());
     },
     setCurrentPatternIndex: (
       state,
@@ -90,24 +57,23 @@ export const songSlice = createSlice({
     },
     setRowNote: (
       state,
-      action: PayloadAction<RowIdentifier & { note: number }>
+      action: PayloadAction<RowIdentifier & { note: Note }>
     ) => {
       const { patternIndex, channel, rowIndex, note } = action.payload;
       state.patterns[patternIndex][channel][rowIndex].note = note;
     },
     setRowVolume: (
       state,
-      action: PayloadAction<RowIdentifier & { volume: number }>
+      action: PayloadAction<RowIdentifier & { volume: VolumeLevel }>
     ) => {
       const { patternIndex, channel, rowIndex, volume } = action.payload;
       state.patterns[patternIndex][channel][rowIndex].volume = volume;
     },
-    setRowEffect: (
-      state,
-      action: PayloadAction<RowIdentifier & { effect: number }>
-    ) => {
-      const { patternIndex, channel, rowIndex, effect } = action.payload;
-      state.patterns[patternIndex][channel][rowIndex].effect = effect;
+    startPlayback: (state) => {
+      state.isPlaying = true;
+    },
+    setCurrentPlaybackRow: (state, action: PayloadAction<number>) => {
+      state.currentPlaybackRow = action.payload;
     },
   },
 });
@@ -116,12 +82,12 @@ export const {
   setSongName,
   setBeatsPerMinute,
   setOrderList,
-  setPatterns,
   addPattern,
   setCurrentPatternIndex,
   setRowNote,
   setRowVolume,
-  setRowEffect,
+  startPlayback,
+  setCurrentPlaybackRow,
 } = songSlice.actions;
 
 export const selectSongName = (state: RootState) => state.song.name;

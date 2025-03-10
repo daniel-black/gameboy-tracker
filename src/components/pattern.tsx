@@ -1,8 +1,9 @@
+import { Note } from "../audio/notes";
+import { Channel } from "../audio/patterns";
+import { VolumeLevel } from "../audio/volume";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
-  Channel,
   selectCurrentPatternIndex,
-  setRowEffect,
   setRowNote,
   setRowVolume,
 } from "../store/slices/song-slice";
@@ -75,11 +76,6 @@ function Row({
         channel={channel}
         rowIndex={rowIndex}
       />
-      <RowEffect
-        patternIndex={patternIndex}
-        channel={channel}
-        rowIndex={rowIndex}
-      />
     </div>
   );
 }
@@ -102,7 +98,7 @@ function RowNote({
     <div>
       <label>N</label>
       <input
-        type="number"
+        type="text"
         value={note}
         onChange={(e) =>
           dispatch(
@@ -110,7 +106,7 @@ function RowNote({
               patternIndex,
               channel,
               rowIndex,
-              note: parseInt(e.target.value),
+              note: e.target.value.toUpperCase() as Note,
             })
           )
         }
@@ -146,43 +142,7 @@ function RowVolume({
               patternIndex,
               channel,
               rowIndex,
-              volume: parseInt(e.target.value),
-            })
-          )
-        }
-        className="w-14"
-      />
-    </div>
-  );
-}
-
-function RowEffect({
-  patternIndex,
-  channel,
-  rowIndex,
-}: {
-  patternIndex: number;
-  channel: Channel;
-  rowIndex: number;
-}) {
-  const dispatch = useAppDispatch();
-  const effect = useAppSelector(
-    (s) => s.song.patterns[patternIndex][channel][rowIndex].effect
-  );
-
-  return (
-    <div>
-      <label>E</label>
-      <input
-        type="number"
-        value={effect}
-        onChange={(e) =>
-          dispatch(
-            setRowEffect({
-              patternIndex,
-              channel,
-              rowIndex,
-              effect: parseInt(e.target.value),
+              volume: parseInt(e.target.value) as VolumeLevel,
             })
           )
         }
