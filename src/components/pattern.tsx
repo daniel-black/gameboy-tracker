@@ -1,6 +1,7 @@
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
   Channel,
+  selectCurrentPatternIndex,
   setRowEffect,
   setRowNote,
   setRowVolume,
@@ -8,31 +9,46 @@ import {
 
 const rows = Array.from({ length: 64 });
 
-export function Pattern({ patternIndex }: { patternIndex: number }) {
+export function Pattern() {
+  const currentPatternIndex = useAppSelector(selectCurrentPatternIndex);
+
   return (
     <div>
-      <p>Pattern {patternIndex}</p>
-      <p>pulse1</p>
-      <div>
-        {rows.map((_, i) => (
-          <Row
-            key={i}
-            patternIndex={patternIndex}
-            channel="pulse1"
-            rowIndex={i}
-          />
-        ))}
-      </div>
-      <p>pulse2</p>
-      <div>
-        {rows.map((_, i) => (
-          <Row
-            key={i}
-            patternIndex={patternIndex}
-            channel="pulse2"
-            rowIndex={i}
-          />
-        ))}
+      <p>Pattern {currentPatternIndex}</p>
+      <div className="flex flex-row text-xs">
+        <div className="mr-4">
+          <ul className="pt-4">
+            {rows.map((_, i) => (
+              <li key={i}>{i}</li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <p>pulse1</p>
+          <div>
+            {rows.map((_, i) => (
+              <Row
+                key={i}
+                patternIndex={currentPatternIndex}
+                channel="pulse1"
+                rowIndex={i}
+              />
+            ))}
+          </div>
+        </div>
+        <div>
+          <p>pulse2</p>
+          <div>
+            {rows.map((_, i) => (
+              <Row
+                key={i}
+                patternIndex={currentPatternIndex}
+                channel="pulse2"
+                rowIndex={i}
+              />
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -48,7 +64,7 @@ function Row({
   rowIndex: number;
 }) {
   return (
-    <div>
+    <div className="flex max-w-fit">
       <RowNote
         patternIndex={patternIndex}
         channel={channel}
@@ -84,7 +100,7 @@ function RowNote({
 
   return (
     <div>
-      <label>note</label>
+      <label>N</label>
       <input
         type="number"
         value={note}
@@ -98,6 +114,7 @@ function RowNote({
             })
           )
         }
+        className="w-14"
       />
     </div>
   );
@@ -119,7 +136,7 @@ function RowVolume({
 
   return (
     <div>
-      <label>volume</label>
+      <label>V</label>
       <input
         type="number"
         value={volume}
@@ -133,6 +150,7 @@ function RowVolume({
             })
           )
         }
+        className="w-14"
       />
     </div>
   );
@@ -154,7 +172,7 @@ function RowEffect({
 
   return (
     <div>
-      <label>effect</label>
+      <label>E</label>
       <input
         type="number"
         value={effect}
@@ -168,6 +186,7 @@ function RowEffect({
             })
           )
         }
+        className="w-14"
       />
     </div>
   );

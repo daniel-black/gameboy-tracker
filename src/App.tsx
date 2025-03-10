@@ -3,6 +3,8 @@ import { EditBpm } from "./components/edit-bpm";
 import { EditSongName } from "./components/edit-song-name";
 import { Pattern } from "./components/pattern";
 import { SongName } from "./components/song-name";
+import "./app.css";
+import { Patterns } from "./components/patterns";
 
 export function App() {
   return (
@@ -13,6 +15,8 @@ export function App() {
       <hr />
       <Bpm />
       <EditBpm />
+      <hr />
+      <Patterns />
       <hr />
       <Pattern patternIndex={0} />
     </div>

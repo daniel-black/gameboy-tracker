@@ -15,18 +15,19 @@ export interface Song {
   beatsPerMinute: number;
   orderList: Array<number>;
   patterns: Array<Pattern>;
+  currentPatternIndex: number;
+  isPlaying: boolean;
+  currentPlaybackRow: number;
 }
 
 const initialState: Song = {
   name: undefined,
   beatsPerMinute: 120,
-  orderList: [0, 1, 2, 3],
-  patterns: [
-    getDefaultPattern(),
-    getDefaultPattern(),
-    getDefaultPattern(),
-    getDefaultPattern(),
-  ],
+  orderList: [0],
+  currentPatternIndex: 0,
+  patterns: [getDefaultPattern()],
+  isPlaying: false,
+  currentPlaybackRow: 0,
 };
 
 function getDefaultPattern(): Pattern {
@@ -78,6 +79,15 @@ export const songSlice = createSlice({
     setPatterns: (state, action: PayloadAction<Song["patterns"]>) => {
       state.patterns = action.payload;
     },
+    addPattern: (state) => {
+      state.patterns.push(getDefaultPattern());
+    },
+    setCurrentPatternIndex: (
+      state,
+      action: PayloadAction<Song["currentPatternIndex"]>
+    ) => {
+      state.currentPatternIndex = action.payload;
+    },
     setRowNote: (
       state,
       action: PayloadAction<RowIdentifier & { note: number }>
@@ -107,6 +117,8 @@ export const {
   setBeatsPerMinute,
   setOrderList,
   setPatterns,
+  addPattern,
+  setCurrentPatternIndex,
   setRowNote,
   setRowVolume,
   setRowEffect,
@@ -117,5 +129,7 @@ export const selectBeatsPerMinute = (state: RootState) =>
   state.song.beatsPerMinute;
 export const selectOrderList = (state: RootState) => state.song.orderList;
 export const selectPatterns = (state: RootState) => state.song.patterns;
+export const selectCurrentPatternIndex = (state: RootState) =>
+  state.song.currentPatternIndex;
 
 export default songSlice.reducer;
