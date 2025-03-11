@@ -1,26 +1,18 @@
 import "./app.css";
-import { Bpm } from "./components/bpm";
-import { EditBpm } from "./components/edit-bpm";
-import { EditSongName } from "./components/edit-song-name";
-import { Pattern } from "./components/pattern";
-import { SongName } from "./components/song-name";
+import { PatternGrid } from "./components/pattern-grid";
 import { Patterns } from "./components/patterns";
 import { Play } from "./components/play";
 
 export function App() {
   return (
     <div className="font-mono">
-      <p>this is the app</p>
-      <SongName />
-      <EditSongName />
-      <hr />
-      <Bpm />
-      <EditBpm />
-      <hr />
-      <Patterns />
-      <hr />
-      <Play />
-      <Pattern />
+      <div className="flex gap-8 p-4">
+        <div>
+          <Play />
+          <Patterns />
+        </div>
+        <PatternGrid />
+      </div>
     </div>
   );
 }

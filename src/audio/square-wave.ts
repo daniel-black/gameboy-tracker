@@ -54,11 +54,6 @@ export class SquareWave {
       .connect(masterGainNode);
   }
 
-  public scheduleAudio(startTime: number, row: PulseRow) {
-    this.source.frequency.setValueAtTime(getFrequency(row.note), startTime);
-    this.gainNode.gain.setValueAtTime(getVolume(row.volume), startTime);
-  }
-
   public scheduleStartAndStop(startTime: number, stopTime: number) {
     this.source.start(startTime);
     this.source.stop(stopTime);

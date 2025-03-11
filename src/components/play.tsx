@@ -1,12 +1,17 @@
-import { useAppDispatch } from "../store/hooks";
-import { startPlayback } from "../store/slices/song-slice";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import {
+  selectIsPlaying,
+  startPlayback,
+  stopPlayback,
+} from "../store/slices/song-slice";
 
 export function Play() {
   const dispatch = useAppDispatch();
+  const isPlaying = useAppSelector(selectIsPlaying);
 
   function handleOnClick() {
-    dispatch(startPlayback());
+    dispatch((isPlaying ? stopPlayback : startPlayback)());
   }
 
-  return <button onClick={handleOnClick}>Play</button>;
+  return <button onClick={handleOnClick}>{isPlaying ? "Stop" : "Play"}</button>;
 }

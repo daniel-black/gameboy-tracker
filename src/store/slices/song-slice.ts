@@ -48,6 +48,7 @@ export const songSlice = createSlice({
     },
     addPattern: (state) => {
       state.patterns.push(createDefaultPattern());
+      state.currentPatternIndex++;
     },
     setCurrentPatternIndex: (
       state,
@@ -72,7 +73,14 @@ export const songSlice = createSlice({
     startPlayback: (state) => {
       state.isPlaying = true;
     },
-    setCurrentPlaybackRow: (state, action: PayloadAction<number>) => {
+    stopPlayback: (state) => {
+      state.isPlaying = false;
+      state.currentPlaybackRow = 0;
+    },
+    setCurrentPlaybackRow: (
+      state,
+      action: PayloadAction<Song["currentPlaybackRow"]>
+    ) => {
       state.currentPlaybackRow = action.payload;
     },
   },
@@ -87,6 +95,7 @@ export const {
   setRowNote,
   setRowVolume,
   startPlayback,
+  stopPlayback,
   setCurrentPlaybackRow,
 } = songSlice.actions;
 
@@ -97,5 +106,6 @@ export const selectOrderList = (state: RootState) => state.song.orderList;
 export const selectPatterns = (state: RootState) => state.song.patterns;
 export const selectCurrentPatternIndex = (state: RootState) =>
   state.song.currentPatternIndex;
+export const selectIsPlaying = (state: RootState) => state.song.isPlaying;
 
 export default songSlice.reducer;
