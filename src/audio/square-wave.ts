@@ -1,6 +1,4 @@
-import { getFrequency } from "./notes";
-import { PulseRow } from "./patterns";
-import { getVolume, VolumeLevel } from "./volume";
+import { VolumeLevel } from "./volume";
 import { DutyCycle, getWaveShaperCurve } from "./wave-shaper";
 
 type SquareWaveOptions = {
@@ -55,7 +53,11 @@ export class SquareWave {
   }
 
   public scheduleStartAndStop(startTime: number, stopTime: number) {
-    this.source.start(startTime);
+    // If startTime is in the past or very close to current time, start now
+    const now = this.context.currentTime;
+    const actualStartTime = startTime < now ? now : startTime;
+
+    this.source.start(actualStartTime);
     this.source.stop(stopTime);
   }
 }
