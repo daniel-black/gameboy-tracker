@@ -1,66 +1,50 @@
 import { Note } from "./notes";
+import { ChannelType } from "./channels";
+import { ROWS_PER_PATTERN } from "./constants";
 import { VolumeLevel } from "./volume";
 import { DutyCycle } from "./wave-shaper";
 
-export type Pattern = {
-  pulse1: Array<PulseRow>;
-  pulse2: Array<PulseRow>;
-  wave: Array<WaveRow>;
-  noise: Array<NoiseRow>;
-};
+export class Pattern {
+  public id: string;
+  public name: string;
 
-export type Channel = keyof Pattern;
+  private cellData: Record<ChannelType, Array<Cell | null>>;
 
-export type PulseRow = {
-  note: Note;
-  duty: DutyCycle;
-  volume: VolumeLevel;
-};
+  constructor(id: string, name: string) {
+    this.id = id;
+    this.name = name;
 
-function createDefaultPulseRow(): PulseRow {
-  return {
-    note: "---",
-    duty: 0.5,
-    volume: 1,
-  };
+    this.cellData = {
+      pulse1: new Array(64).fill(null),
+      pulse2: new Array(64).fill(null),
+      wave: new Array(64).fill(null),
+      noise: new Array(64).fill(null),
+    };
+  }
+
+  public setName(name: string) {
+    this.name = name;
+  }
+
+  public getCell(channel: ChannelType, row: number) {
+    if (row < 0 || row >= ROWS_PER_PATTERN) {
+      throw new Error("Row out of bounds");
+    }
+
+    return this.cellData[channel][row];
+  }
+
+  public setCell(channel: ChannelType, row: number, newCell: Cell | null) {
+    if (row < 0 || row >= ROWS_PER_PATTERN) {
+      throw new Error("Row out of bounds");
+    }
+
+    this.cellData[channel][row] = newCell;
+  }
 }
 
-// type Pulse2Row = {
-//   note: Note;
-//   duty: DutyCycle;
-//   volume: VolumeLevel;
-// };
-
-// keep this simple initially by letting users select a preset wave type like "sine", "square", "sawtooth", "triangle"
-type WaveRow = {
-  note: Note;
-  volume: 0 | 0.25 | 0.5 | 1;
-};
-
-function createDefaultWaveRow(): WaveRow {
-  return {
-    note: "---",
-    volume: 1,
-  };
-}
-
-type NoiseRow = {
+export interface Cell {
   note: Note;
   volume: VolumeLevel;
-};
-
-function createDefaultNoiseRow(): NoiseRow {
-  return {
-    note: "---",
-    volume: 1,
-  };
-}
-
-export function createDefaultPattern(): Pattern {
-  return {
-    pulse1: new Array(64).fill(createDefaultPulseRow()),
-    pulse2: new Array(64).fill(createDefaultPulseRow()),
-    wave: new Array(64).fill(createDefaultWaveRow()),
-    noise: new Array(64).fill(createDefaultNoiseRow()),
-  };
+  dutyCycle?: DutyCycle; // for pulse1 and pulse2
 }
