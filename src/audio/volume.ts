@@ -20,3 +20,5 @@ export type VolumeLevel = ToNumber<Indices<typeof VOLUME>>;
 export function getVolume(volumeLevel: VolumeLevel) {
   return VOLUME[volumeLevel] || 0;
 }
+
+export type WaveVolumeLevel = 0 | 0.25 | 0.5 | 1;

@@ -5,6 +5,7 @@ export class TypedEventEmitter<T extends Record<string, any>> {
 
   constructor() {
     this.emitter = new EventEmitter();
+    this.emitter.setMaxListeners(500); // fine tune this eventually
   }
 
   // Type-safe emit method

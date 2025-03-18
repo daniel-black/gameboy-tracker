@@ -121,7 +121,7 @@ export type MusicalNote = keyof typeof NOTE_FREQUENCY;
 
 export type SpecialNote =
   | "---" // do nothing new, continue previous note
-  | "OFF"; // turn off note
+  | "OFF"; // turn off note (really means frequency = 0)
 
 export type Note = MusicalNote | SpecialNote;
 

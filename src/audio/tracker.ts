@@ -1,7 +1,14 @@
 import { nanoid } from "nanoid";
 import { ChannelType } from "./channels";
-import { DEFAULT_BPM, MAX_PATTERNS } from "./constants";
-import { Pattern } from "./patterns";
+import { DEFAULT_BPM, MAX_PATTERNS, ROWS_PER_PATTERN } from "./constants";
+import {
+  createDefaultNoiseCell,
+  createDefaultPulseCell,
+  createDefaultWaveCell,
+  NoiseCell,
+  PulseCell,
+  WaveCell,
+} from "./cell";
 import { TypedEventEmitter } from "./typed-event-emmiter";
 import { getWaveShaperCurve } from "./wave-shaper";
 
@@ -94,9 +101,8 @@ export class Tracker {
 
     // Set up patterns
     this.patterns = new Map<string, Pattern>();
-    const initialPatternId = nanoid();
-    const initialPattern = new Pattern(initialPatternId, "Pattern 1");
-    this.patterns.set(initialPatternId, initialPattern);
+    const initialPattern = this.createNewPattern("Pattern 1");
+    this.patterns.set(initialPattern.id, initialPattern);
     this.patternOrder = [initialPattern.id];
     this.currentPatternId = initialPattern.id;
 
@@ -108,6 +114,19 @@ export class Tracker {
 
     // Set up event emitter
     this.emitter = new TypedEventEmitter<TrackerEventMap>();
+  }
+
+  private createNewPattern(name?: string): Pattern {
+    return {
+      name: name || `Pattern ${this.patterns.size + 1}`,
+      id: nanoid(),
+      cells: {
+        pulse1: new Array(ROWS_PER_PATTERN).fill(createDefaultPulseCell()),
+        pulse2: new Array(ROWS_PER_PATTERN).fill(createDefaultPulseCell()),
+        wave: new Array(ROWS_PER_PATTERN).fill(createDefaultWaveCell()),
+        noise: new Array(ROWS_PER_PATTERN).fill(createDefaultNoiseCell()),
+      },
+    };
   }
 
   public getBpm() {
@@ -131,16 +150,18 @@ export class Tracker {
     );
   }
 
-  public createPattern() {
+  public addPattern() {
     if (this.patterns.size >= MAX_PATTERNS) {
       return;
     }
 
-    const id = nanoid();
-    const pattern = new Pattern(id, `Pattern ${this.patterns.size + 1}`);
+    const newPattern = this.createNewPattern();
 
-    this.patterns.set(id, pattern);
-    this.patternOrder.push(id);
+    this.patterns.set(newPattern.id, newPattern);
+    this.patternOrder.push(newPattern.id);
+    this.currentPatternId = newPattern.id;
+
+    this.emitter.emit("changedCurrentPattern", { patternId: newPattern.id });
   }
 
   public getIsChannelEnabled(channel: ChannelType) {
@@ -152,6 +173,55 @@ export class Tracker {
     this.channels[channel].gate.gain.value = isEnabled ? 0 : 1;
     this.emitter.emit("toggledChannel", { channel, enabled: !isEnabled });
   }
+
+  public getCurrentPattern() {
+    const currentPattern = this.patterns.get(this.currentPatternId);
+    if (!currentPattern) {
+      throw new Error("no current pattern");
+    }
+
+    return currentPattern;
+  }
+
+  public getCurrentPatternId() {
+    return this.currentPatternId;
+  }
+
+  public getPulse1Cell(row: number): PulseCell {
+    return this.getCurrentPattern().cells.pulse1[row];
+  }
+
+  public setPulse1Cell(row: number, newCell: PulseCell) {
+    this.getCurrentPattern().cells.pulse1[row] = newCell;
+    this.emitter.emit("changedPulse1Cell", { row });
+  }
+
+  public getPulse2Cell(row: number): PulseCell {
+    return this.getCurrentPattern().cells.pulse2[row];
+  }
+
+  public setPulse2Cell(row: number, newCell: PulseCell) {
+    this.getCurrentPattern().cells.pulse2[row] = newCell;
+    this.emitter.emit("changedPulse2Cell", { row });
+  }
+
+  public setWaveCell(row: number, newCell: WaveCell) {
+    this.getCurrentPattern().cells.wave[row] = newCell;
+    this.emitter.emit("changedWaveCell", { row });
+  }
+
+  public getWaveCell(row: number): WaveCell {
+    return this.getCurrentPattern().cells.wave[row];
+  }
+
+  public getNoiseCell(row: number): NoiseCell {
+    return this.getCurrentPattern().cells.noise[row];
+  }
+
+  public setNoiseCell(row: number, newCell: NoiseCell) {
+    this.getCurrentPattern().cells.noise[row] = newCell;
+    this.emitter.emit("changedNoiseCell", { row });
+  }
 }
 
 // Create a single instance of the tracker
@@ -161,6 +231,10 @@ export interface TrackerEventMap {
   changedBpm: { bpm: number };
   changedCurrentPattern: { patternId: string };
   toggledChannel: { channel: ChannelType; enabled: boolean };
+  changedPulse1Cell: { row: number };
+  changedPulse2Cell: { row: number };
+  changedWaveCell: { row: number };
+  changedNoiseCell: { row: number };
 }
 
 interface Channels {
@@ -185,5 +259,16 @@ interface Channels {
     source: AudioBufferSourceNode | null;
     gainNode: GainNode;
     gate: GainNode;
+  };
+}
+
+export interface Pattern {
+  id: string;
+  name: string;
+  cells: {
+    pulse1: Array<PulseCell>;
+    pulse2: Array<PulseCell>;
+    wave: Array<WaveCell>;
+    noise: Array<NoiseCell>;
   };
 }
