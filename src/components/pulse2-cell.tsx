@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { tracker, TrackerEventMap } from "../audio/tracker";
+import { tracker } from "../audio/tracker";
 import { Note } from "../audio/notes";
 import { VolumeLevel } from "../audio/volume";
 import { DutyCycle } from "../audio/wave-shaper";
+import { TrackerEventMap } from "../audio/events";
 
 export function Pulse2Cell(props: { row: number }) {
   const [cell, setCell] = useState(tracker.getPulse2Cell(props.row));

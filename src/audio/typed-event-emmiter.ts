@@ -1,11 +1,12 @@
 import { EventEmitter } from "events";
+import { MAX_LISTENERS } from "./constants";
 
 export class TypedEventEmitter<T extends Record<string, any>> {
   private emitter: EventEmitter;
 
   constructor() {
     this.emitter = new EventEmitter();
-    this.emitter.setMaxListeners(500); // fine tune this eventually
+    this.emitter.setMaxListeners(MAX_LISTENERS);
   }
 
   // Type-safe emit method

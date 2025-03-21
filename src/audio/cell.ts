@@ -2,7 +2,13 @@ import { Note } from "./notes";
 import { VolumeLevel, WaveVolumeLevel } from "./volume";
 import { DutyCycle } from "./wave-shaper";
 
-export interface PulseCell {
+export interface Pulse1Cell {
+  note: Note;
+  volume: VolumeLevel;
+  dutyCycle: DutyCycle;
+}
+
+export interface Pulse2Cell {
   note: Note;
   volume: VolumeLevel;
   dutyCycle: DutyCycle;
@@ -19,7 +25,15 @@ export interface NoiseCell {
   volume: VolumeLevel;
 }
 
-export function createDefaultPulseCell(): PulseCell {
+export function createDefaultPulse1Cell(): Pulse1Cell {
+  return {
+    note: "---",
+    volume: 15,
+    dutyCycle: 0.5,
+  };
+}
+
+export function createDefaultPulse2Cell(): Pulse2Cell {
   return {
     note: "---",
     volume: 15,
