@@ -8,7 +8,7 @@ export function PatternGrid() {
       {Array.from({ length: ROWS_PER_PATTERN }).map((_, row) => (
         <div className="flex group" key={`row-num-${row}`}>
           <div
-            className="border px-2 py-0.5 group-hover:bg-slate-100" // do more w this group hover stuff
+            className="border px-3 py-0.5 h-14 flex items-center group-hover:bg-slate-100 text-muted-foreground select-none" // do more w this group hover stuff
           >
             {row < 10 ? `0${row}` : row}
           </div>

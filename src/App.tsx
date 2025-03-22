@@ -5,7 +5,9 @@ import { PlaybackControls } from "./components/playback-controls";
 export function App() {
   return (
     <div className="font-mono flex">
-      <PatternGrid />
+      <div className="m-10">
+        <PatternGrid />
+      </div>
       <PlaybackControls />
     </div>
   );

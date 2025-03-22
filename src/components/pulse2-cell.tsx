@@ -4,6 +4,10 @@ import { Note } from "../audio/notes";
 import { VolumeLevel } from "../audio/volume";
 import { DutyCycle } from "../audio/wave-shaper";
 import { TrackerEventMap } from "../audio/events";
+import { DutyCycleCombobox } from "./duty-cycle-combobox";
+import { Label } from "./ui/label";
+import { NoteCombobox } from "./note-combobox";
+import { Input } from "./ui/input";
 
 export function Pulse2Cell(props: { row: number }) {
   const [cell, setCell] = useState(tracker.getPulse2Cell(props.row));
@@ -37,9 +41,9 @@ export function Pulse2Cell(props: { row: number }) {
     };
   }, []);
 
-  function handleNoteChange(e: React.ChangeEvent<HTMLInputElement>) {
-    if (e.target.value.length > 3) return;
-    const newCell = { ...cell, note: e.target.value.toUpperCase() as Note };
+  function handleNoteChange(newNote: string) {
+    if (newNote.length > 3) return;
+    const newCell = { ...cell, note: newNote.toUpperCase() as Note };
     tracker.setPulse2Cell(props.row, newCell);
   }
 
@@ -50,39 +54,34 @@ export function Pulse2Cell(props: { row: number }) {
     tracker.setPulse2Cell(props.row, newCell);
   }
 
-  function handleDutyCycleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const parsedDutyCycle = parseFloat(e.target.value);
-    if (isNaN(parsedDutyCycle) || parsedDutyCycle < 0 || parsedDutyCycle > 1)
-      return;
-    const newCell = { ...cell, dutyCycle: parsedDutyCycle as DutyCycle };
+  function handleDutyCycleChange(newDutyCycle: DutyCycle) {
+    const newCell = { ...cell, dutyCycle: newDutyCycle };
     tracker.setPulse2Cell(props.row, newCell);
   }
 
   return (
-    <div className="border py-0.5 px-2 hover:bg-slate-100">
-      n:
-      <input
-        type="text"
-        value={cell.note}
-        onChange={handleNoteChange}
-        className="w-12"
-      />
-      v:
-      <input
-        type="number"
-        min={0}
-        max={15}
-        value={cell.volume}
-        onChange={handleVolumeChange}
-      />
-      dc
-      <input
-        type="number"
-        min={0}
-        value={cell.dutyCycle}
-        onChange={handleDutyCycleChange}
-        className="w-18"
-      />
+    <div className="border py-0.5 h-14 px-3 hover:bg-slate-100 flex items-center gap-4">
+      <Label>
+        <span className="text-muted-foreground text-xs">N</span>
+        <NoteCombobox note={cell.note} handleNoteChange={handleNoteChange} />
+      </Label>
+      <Label>
+        <span className="text-muted-foreground text-xs">V</span>
+        <Input
+          type="number"
+          min={0}
+          max={15}
+          value={cell.volume}
+          onChange={handleVolumeChange}
+        />
+      </Label>
+      <Label>
+        <span className="text-muted-foreground text-xs">D</span>
+        <DutyCycleCombobox
+          dutyCycle={cell.dutyCycle}
+          handleDutyCycleChange={handleDutyCycleChange}
+        />
+      </Label>
     </div>
   );
 }
