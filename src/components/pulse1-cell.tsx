@@ -60,7 +60,7 @@ export function Pulse1Cell(props: { row: number }) {
   }
 
   return (
-    <div className="border py-0.5 h-14 px-3 hover:bg-slate-50 flex items-center gap-4">
+    <div className="border py-0.5 h-14 px-3 hover:bg-slate-100 flex items-center gap-4">
       <Label>
         <span className="text-muted-foreground text-xs">N</span>
         <NoteCombobox note={cell.note} handleNoteChange={handleNoteChange} />

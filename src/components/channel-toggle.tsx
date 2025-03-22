@@ -2,6 +2,7 @@ import { TrackerEventMap } from "@/audio/events";
 import { tracker } from "@/audio/tracker";
 import { ChannelType } from "@/audio/types";
 import { useEffect, useState } from "react";
+import { Checkbox } from "./ui/checkbox";
 
 export function ChannelToggle(props: { channel: ChannelType }) {
   const [isChannelEnabled, setIsChannelEnabled] = useState(
@@ -29,14 +30,9 @@ export function ChannelToggle(props: { channel: ChannelType }) {
   }
 
   return (
-    <div>
-      <input
-        type="checkbox"
-        id={props.channel}
-        checked={isChannelEnabled}
-        onChange={handleChannelToggle}
-      />
-      <label htmlFor={props.channel}>{props.channel}</label>
-    </div>
+    <Checkbox
+      checked={isChannelEnabled}
+      onCheckedChange={handleChannelToggle}
+    />
   );
 }
