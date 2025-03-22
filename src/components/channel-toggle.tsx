@@ -1,6 +1,7 @@
+import { TrackerEventMap } from "@/audio/events";
+import { tracker } from "@/audio/tracker";
+import { ChannelType } from "@/audio/types";
 import { useEffect, useState } from "react";
-import { ChannelType } from "../audio/channels";
-import { tracker, TrackerEventMap } from "../audio/tracker";
 
 export function ChannelToggle(props: { channel: ChannelType }) {
   const [isChannelEnabled, setIsChannelEnabled] = useState(

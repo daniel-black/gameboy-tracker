@@ -125,8 +125,7 @@ export const PlaybackControls: React.FC = () => {
     setIsTransitioning(true);
 
     try {
-      console.log("Playing section with looping:", isLooping); // Debug log
-      await tracker.playSection(selectionStart, selectionEnd, isLooping);
+      await tracker.playSection(selectionStart, selectionEnd);
     } catch (error) {
       console.error("Error during play section:", error);
       setIsTransitioning(false);

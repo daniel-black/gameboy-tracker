@@ -1,30 +1,29 @@
-import { useEffect, useState } from "react";
-import { tracker, TrackerEventMap } from "../audio/tracker";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { useBpm } from "@/hooks/use-bpm";
 
-export function Bpm() {
-  const [bpm, setBpm] = useState(tracker.getBpm());
+export function BPM() {
+  const [bpm, updateBpm] = useBpm();
 
-  useEffect(() => {
-    const handleBpmChangeEvent = (eventData: TrackerEventMap["changedBpm"]) => {
-      setBpm(eventData.bpm);
-    };
-
-    tracker.emitter.on("changedBpm", handleBpmChangeEvent);
-
-    return () => {
-      tracker.emitter.off("changedBpm", handleBpmChangeEvent);
-    };
-  }, []);
-
-  function handleBpmChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const newBpm = parseInt(event.target.value, 10);
-    tracker.setBpm(newBpm);
+  function handleBPMChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const newBPM = parseInt(event.target.value, 10);
+    updateBpm(newBPM);
   }
 
   return (
     <div>
-      <label htmlFor="bpm">BPM:</label>
-      <input id="bpm" type="number" value={bpm} onChange={handleBpmChange} />
+      <Label htmlFor="bpm-control">
+        <span>BPM</span>
+        <Input
+          id="bpm-control"
+          type="number"
+          min={40}
+          max={240}
+          value={bpm}
+          onChange={handleBPMChange}
+          className="w-20"
+        />
+      </Label>
     </div>
   );
 }

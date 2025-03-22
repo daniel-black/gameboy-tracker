@@ -1,5 +1,6 @@
 import { nanoid } from "nanoid";
 import {
+  CHANNELS,
   DEFAULT_BPM,
   MAX_PATTERNS,
   ROWS_PER_BEAT,
@@ -30,28 +31,31 @@ export class Tracker {
   private ctx: AudioContext;
   private masterGainNode: GainNode;
 
+  // Audio channels
+  private channels: Channels;
+
   // Pattern state
   private patterns: Map<string, Pattern>;
   private patternOrder: Array<string>;
   private currentPatternId: string;
 
-  // Playback state (needs work)
+  // Playback state
   private bpm: number;
-  private isPlaying = false;
-  private isPaused = false;
-  private currentRow = 0;
-  private currentPatternIndex = 0;
-  private lookaheadTime = 0.1; // 100ms
-  private scheduleIntervalTime = 50; // ms between scheduling events
-  private scheduleInterval: number | null = null;
-  private nextNoteTime = 0;
-  private startRow = 0;
-  private endRow = ROWS_PER_PATTERN - 1;
-  private startPatternIndex = 0;
-  private endPatternIndex = 0;
-  private isLooping = false;
+  private isPlaying: boolean;
+  private isPaused: boolean;
+  private currentRow: number;
+  private currentPatternIndex: number;
+  private lookaheadTime: number;
+  private scheduleIntervalTime: number;
+  private scheduleIntervalId: number | null;
+  private nextNoteTime: number;
+  private startRow: number;
+  private endRow: number;
+  private startPatternIndex: number;
+  private endPatternIndex: number;
+  private isLooping: boolean;
 
-  private channels: Channels;
+  private sourcesStarted: boolean;
 
   // Emitter to let the UI know what's up
   public emitter: TypedEventEmitter<TrackerEventMap>;
@@ -66,53 +70,55 @@ export class Tracker {
     // Create the channels
     this.channels = {
       pulse1: {
-        source: null,
+        source: new OscillatorNode(this.ctx, {
+          type: "sawtooth",
+        }),
         waveShaper: new WaveShaperNode(this.ctx, {
           curve: getWaveShaperCurve(0.5),
         }),
-        gainNode: new GainNode(this.ctx),
+        gainNode: new GainNode(this.ctx, { gain: 0 }),
         gate: new GainNode(this.ctx, { gain: 1 }),
       },
       pulse2: {
-        source: null,
+        source: new OscillatorNode(this.ctx, {
+          type: "sawtooth",
+        }),
         waveShaper: new WaveShaperNode(this.ctx, {
           curve: getWaveShaperCurve(0.5),
         }),
-        gainNode: new GainNode(this.ctx),
+        gainNode: new GainNode(this.ctx, { gain: 0 }),
         gate: new GainNode(this.ctx, { gain: 1 }),
       },
       wave: {
         source: null,
-        gainNode: new GainNode(this.ctx),
+        gainNode: new GainNode(this.ctx, { gain: 0 }),
         gate: new GainNode(this.ctx, { gain: 1 }),
       },
       noise: {
         source: null,
-        gainNode: new GainNode(this.ctx),
+        gainNode: new GainNode(this.ctx, { gain: 0 }),
         gate: new GainNode(this.ctx, { gain: 1 }),
       },
     };
 
     // Configure the channels and connect the audio nodes
-    this.channels.pulse1.waveShaper
-      .connect(this.channels.pulse1.gainNode)
-      .connect(this.channels.pulse1.gate)
-      .connect(this.masterGainNode);
+    this.channels.pulse1.source.connect(this.channels.pulse1.waveShaper);
+    this.channels.pulse1.waveShaper.connect(this.channels.pulse1.gainNode);
+    this.channels.pulse1.gainNode.connect(this.channels.pulse1.gate);
+    this.channels.pulse1.gate.connect(this.masterGainNode);
 
-    this.channels.pulse2.waveShaper
-      .connect(this.channels.pulse2.gainNode)
-      .connect(this.channels.pulse2.gate)
-      .connect(this.masterGainNode);
+    this.channels.pulse2.source.connect(this.channels.pulse2.waveShaper);
+    this.channels.pulse2.waveShaper.connect(this.channels.pulse2.gainNode);
+    this.channels.pulse2.gainNode.connect(this.channels.pulse2.gate);
+    this.channels.pulse2.gate.connect(this.masterGainNode);
 
     // No source hooked up to the wave channel yet
-    this.channels.wave.gainNode
-      .connect(this.channels.wave.gate)
-      .connect(this.masterGainNode);
+    this.channels.wave.gainNode.connect(this.channels.wave.gate);
+    this.channels.wave.gate.connect(this.masterGainNode);
 
     // No source hooked up to the noise channel yet
-    this.channels.noise.gainNode
-      .connect(this.channels.noise.gate)
-      .connect(this.masterGainNode);
+    this.channels.noise.gainNode.connect(this.channels.noise.gate);
+    this.channels.noise.gate.connect(this.masterGainNode);
 
     // Set up patterns
     const initialPattern = this.createNewPattern("Pattern 1");
@@ -123,9 +129,41 @@ export class Tracker {
 
     // Set up playback state
     this.bpm = DEFAULT_BPM;
+    this.isPlaying = false;
+    this.isPaused = false;
+    this.currentRow = 0;
+    this.currentPatternIndex = 0;
+    this.lookaheadTime = 0.1; // 100ms
+    this.scheduleIntervalTime = 50; // ms between scheduling events
+    this.scheduleIntervalId = null;
+    this.nextNoteTime = 0;
+    this.startRow = 0;
+    this.endRow = ROWS_PER_PATTERN - 1;
+    this.startPatternIndex = 0;
+    this.endPatternIndex = 0;
+    this.isLooping = false;
 
     // Set up event emitter
     this.emitter = new TypedEventEmitter<TrackerEventMap>();
+
+    this.sourcesStarted = false;
+  }
+
+  /**
+   * Gets the current beats per minute of the tracker
+   * @returns The current BPM
+   */
+  public getBpm() {
+    return this.bpm;
+  }
+
+  /**
+   * Sets the beats per minute of the tracker and emits a `changedBpm` event
+   * @param bpm The new BPM to set
+   */
+  public setBpm(bpm: number) {
+    this.bpm = bpm;
+    this.emitter.emit("changedBpm", { bpm });
   }
 
   private createNewPattern(name?: string): Pattern {
@@ -141,15 +179,10 @@ export class Tracker {
     };
   }
 
-  public getBpm() {
-    return this.bpm;
-  }
-
-  public setBpm(bpm: number) {
-    this.bpm = bpm;
-    this.emitter.emit("changedBpm", { bpm });
-  }
-
+  /**
+   * Sets the current pattern to a specific pattern by id and emits a `changedCurrentPattern` event
+   * @param id The id of the pattern to set as the current pattern
+   */
   public setCurrentPatternId(id: string) {
     this.currentPatternId = id;
     this.emitter.emit("changedCurrentPattern", { patternId: id });
@@ -176,10 +209,19 @@ export class Tracker {
     this.emitter.emit("changedCurrentPattern", { patternId: newPattern.id });
   }
 
+  /**
+   * Gets whether a channel is enabled or not
+   * @param channel Either "pulse1", "pulse2", "wave", or "noise"
+   * @returns A boolean indicating whether the channel is enabled
+   */
   public getIsChannelEnabled(channel: ChannelType) {
     return this.channels[channel].gate.gain.value === 1;
   }
 
+  /**
+   * Toggles a channel on or off and emits a `toggledChannel` event
+   * @param channel Either "pulse1", "pulse2", "wave", or "noise"
+   */
   public toggleChannel(channel: ChannelType) {
     const isEnabled = this.getIsChannelEnabled(channel);
     this.channels[channel].gate.gain.value = isEnabled ? 0 : 1;
@@ -198,8 +240,6 @@ export class Tracker {
   public getCurrentPatternId() {
     return this.currentPatternId;
   }
-
-  // Getters and setters for cells in the current pattern
 
   public getPulse1Cell(row: number) {
     return this.getCurrentPattern().cells.pulse1[row];
@@ -243,45 +283,45 @@ export class Tracker {
       endPatternIndex?: number;
       startRow?: number;
       endRow?: number;
-      isLooping?: boolean;
     } = {}
   ) {
-    if (this.isPaused) {
-      return this.resume();
+    if (!this.sourcesStarted) {
+      this.channels.pulse1.source.start();
+      this.channels.pulse2.source.start();
+      this.sourcesStarted = true; // Prevent starting the sources multiple times
     }
 
-    if (this.isPlaying) {
-      this.stop();
-    }
+    if (this.isPaused) return this.resume();
+    if (this.isPlaying) this.stop();
 
     try {
-      if (this.ctx.state === "suspended") {
-        await this.ctx.resume();
-      }
+      if (this.ctx.state === "suspended") await this.ctx.resume();
 
-      // Configure playback options with explicit defaults
-      this.startPatternIndex = options.startPatternIndex ?? 0;
-      this.endPatternIndex =
-        options.endPatternIndex ?? this.patternOrder.length - 1;
-      this.startRow = options.startRow ?? 0;
-      this.endRow = options.endRow ?? ROWS_PER_PATTERN - 1;
-      this.isLooping = options.isLooping ?? false; // Default to false
-
-      // Debug log to help diagnose issues
-      console.log(`Starting playback with looping: ${this.isLooping}`);
-
-      // Set up initial state
+      const maxPatternIndex = this.patternOrder.length - 1;
+      this.startPatternIndex = Math.max(
+        0,
+        Math.min(options.startPatternIndex ?? 0, maxPatternIndex)
+      );
+      this.endPatternIndex = Math.max(
+        this.startPatternIndex,
+        Math.min(options.endPatternIndex ?? maxPatternIndex, maxPatternIndex)
+      );
+      this.startRow = Math.max(
+        0,
+        Math.min(options.startRow ?? 0, ROWS_PER_PATTERN - 1)
+      );
+      this.endRow = Math.max(
+        this.startRow,
+        Math.min(options.endRow ?? ROWS_PER_PATTERN - 1, ROWS_PER_PATTERN - 1)
+      );
       this.currentPatternIndex = this.startPatternIndex;
       this.currentRow = this.startRow;
       this.isPlaying = true;
       this.isPaused = false;
       this.nextNoteTime = this.ctx.currentTime;
 
-      // start oscillators
-      this.startSources();
-
       // Start the scheduler
-      this.scheduleInterval = window.setInterval(
+      this.scheduleIntervalId = window.setInterval(
         () => this.scheduler(),
         this.scheduleIntervalTime
       );
@@ -293,7 +333,6 @@ export class Tracker {
       });
     } catch (error) {
       console.error("Error starting playback:", error);
-      // If playing fails, ensure we're in a clean state
       this.isPlaying = false;
       this.isPaused = false;
     }
@@ -359,7 +398,7 @@ export class Tracker {
       const frequency = getFrequency(cell.note);
       if (frequency > 0) {
         // Set frequency at the scheduled time
-        this.channels.pulse1.source!.frequency.setValueAtTime(frequency, time);
+        this.channels.pulse1.source.frequency.setValueAtTime(frequency, time);
 
         // Set volume
         this.channels.pulse1.gainNode.gain.setValueAtTime(
@@ -367,6 +406,7 @@ export class Tracker {
           time
         );
 
+        // Set duty cycle
         this.channels.pulse1.waveShaper.curve = getWaveShaperCurve(
           cell.dutyCycle
         );
@@ -387,7 +427,7 @@ export class Tracker {
       const frequency = getFrequency(cell.note);
       if (frequency > 0) {
         // Set frequency at the scheduled time
-        this.channels.pulse2.source!.frequency.setValueAtTime(frequency, time);
+        this.channels.pulse2.source.frequency.setValueAtTime(frequency, time);
 
         // Set volume
         this.channels.pulse2.gainNode.gain.setValueAtTime(
@@ -428,6 +468,7 @@ export class Tracker {
           console.log("Reached end, stopping playback"); // Debug log
           // End playback
           this.stopScheduler();
+          this.silenceAllChannels();
           return;
         }
       }
@@ -459,7 +500,7 @@ export class Tracker {
       this.isPaused = false;
       this.isPlaying = true;
       // Restart the scheduler if there was an error
-      this.scheduleInterval = window.setInterval(
+      this.scheduleIntervalId = window.setInterval(
         () => this.scheduler(),
         this.scheduleIntervalTime
       );
@@ -483,7 +524,7 @@ export class Tracker {
       this.nextNoteTime = this.ctx.currentTime;
 
       // Start the scheduler again
-      this.scheduleInterval = window.setInterval(
+      this.scheduleIntervalId = window.setInterval(
         () => this.scheduler(),
         this.scheduleIntervalTime
       );
@@ -525,24 +566,20 @@ export class Tracker {
    * Helper to stop the scheduling interval
    */
   private stopScheduler() {
-    if (this.scheduleInterval !== null) {
-      clearInterval(this.scheduleInterval);
-      this.scheduleInterval = null;
+    if (this.scheduleIntervalId !== null) {
+      clearInterval(this.scheduleIntervalId);
+      this.scheduleIntervalId = null;
     }
     this.isPlaying = false;
   }
 
-  private startSources() {
-    this.recreateOscillators();
-    this.channels.pulse1.source!.start();
-    this.channels.pulse2.source!.start();
-  }
-
   private silenceAllChannels() {
-    // Set gain to 0 for all channels
-    this.channels.pulse1.gainNode.gain.setValueAtTime(0, this.ctx.currentTime);
-    this.channels.pulse2.gainNode.gain.setValueAtTime(0, this.ctx.currentTime);
-    // We'd do the same for wave and noise when implemented
+    CHANNELS.forEach((channel) =>
+      this.channels[channel].gainNode.gain.setValueAtTime(
+        0,
+        this.ctx.currentTime
+      )
+    );
   }
 
   private getPatternById(id: string): Pattern | undefined {
@@ -553,7 +590,7 @@ export class Tracker {
    * Play the current pattern only
    */
   public async playCurrentPattern(
-    options: { startRow?: number; endRow?: number; isLooping?: boolean } = {}
+    options: { startRow?: number; endRow?: number } = {}
   ) {
     const currentPatternIndex = this.patternOrder.indexOf(
       this.currentPatternId
@@ -565,14 +602,13 @@ export class Tracker {
       endPatternIndex: currentPatternIndex,
       startRow: options.startRow ?? 0,
       endRow: options.endRow ?? ROWS_PER_PATTERN - 1,
-      isLooping: options.isLooping ?? false,
     });
   }
 
   /**
    * Play the entire song (all patterns in order)
    */
-  public async playSong(isLooping: boolean = false) {
+  public async playSong() {
     if (this.patternOrder.length === 0) return;
 
     await this.play({
@@ -580,18 +616,13 @@ export class Tracker {
       endPatternIndex: this.patternOrder.length - 1,
       startRow: 0,
       endRow: ROWS_PER_PATTERN - 1,
-      isLooping,
     });
   }
 
   /**
    * Play a section of the current pattern
    */
-  public async playSection(
-    startRow: number,
-    endRow: number,
-    isLooping: boolean = true
-  ) {
+  public async playSection(startRow: number, endRow: number) {
     const currentPatternIndex = this.patternOrder.indexOf(
       this.currentPatternId
     );
@@ -602,40 +633,31 @@ export class Tracker {
       endPatternIndex: currentPatternIndex,
       startRow,
       endRow,
-      isLooping,
     });
   }
 
-  /**
-   * Creates new oscillator nodes for pulse channels
-   */
-  private recreateOscillators() {
-    // Create new oscillators for pulse1
-    if (!this.channels.pulse1.source) {
-      this.channels.pulse1.source = new OscillatorNode(this.ctx, {
-        type: "sawtooth",
-      });
+  public getLooping() {
+    return this.isLooping;
+  }
 
-      // Connect it to the audio graph
-      this.channels.pulse1.source.connect(this.channels.pulse1.waveShaper);
-    }
-
-    // Create new oscillators for pulse2
-    if (!this.channels.pulse2.source) {
-      // Create new oscillator
-      this.channels.pulse2.source = new OscillatorNode(this.ctx, {
-        type: "sawtooth",
-      });
-
-      // Connect it to the audio graph
-      this.channels.pulse2.source.connect(this.channels.pulse2.waveShaper);
-    }
+  public setLooping(isLooping: boolean) {
+    this.isLooping = isLooping;
+    this.emitter.emit("changedLooping", { isLooping });
   }
 
   public ensureAudioContextRunning() {
     if (this.ctx.state === "suspended") {
       this.ctx.resume();
     }
+  }
+
+  public setMasterVolume(volume: number) {
+    const clampedVolume = Math.max(0, Math.min(volume, 1)); // 0 to 1 range
+    this.masterGainNode.gain.setValueAtTime(
+      clampedVolume,
+      this.ctx.currentTime
+    );
+    this.emitter.emit("changedMasterVolume", { volume: clampedVolume });
   }
 }
 

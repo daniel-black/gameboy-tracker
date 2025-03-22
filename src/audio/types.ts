@@ -3,13 +3,13 @@ import { CHANNELS } from "./constants";
 
 export interface Channels {
   pulse1: {
-    source: OscillatorNode | null;
+    source: OscillatorNode;
     waveShaper: WaveShaperNode;
     gainNode: GainNode;
     gate: GainNode;
   };
   pulse2: {
-    source: OscillatorNode | null;
+    source: OscillatorNode;
     gainNode: GainNode;
     waveShaper: WaveShaperNode;
     gate: GainNode;
