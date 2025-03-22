@@ -1,11 +1,13 @@
 import { ROWS_PER_PATTERN } from "../audio/constants";
 import { ChannelToggle } from "./channel-toggle";
+import { PlaybackOverlay } from "./playback-overlay";
 import { Pulse1Cell } from "./pulse1-cell";
 import { Pulse2Cell } from "./pulse2-cell";
 
 export function PatternGrid() {
   return (
-    <div>
+    <div className="relative">
+      {/* Channel Headers */}
       <div className="flex mb-2">
         <div className="w-[46px]"></div>
         <div className="w-[345px] px-3 font-bold space-x-3">
@@ -17,7 +19,10 @@ export function PatternGrid() {
           <span>Pulse Wave 2</span>
         </div>
       </div>
-      <div>
+
+      {/* Pattern rows container */}
+      <div className="relative">
+        <PlaybackOverlay />
         {Array.from({ length: ROWS_PER_PATTERN }).map((_, row) => (
           <div
             className={`flex group ${row % 4 === 0 ? "bg-slate-50" : ""}`}
