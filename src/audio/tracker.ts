@@ -112,7 +112,7 @@ export class Tracker {
         gate: new GainNode(this.ctx, { gain: 1 }),
       },
       wave: {
-        source: null,
+        source: new OscillatorNode(this.ctx, { type: "sine" }),
         gainNode: new GainNode(this.ctx, { gain: 0 }),
         gate: new GainNode(this.ctx, { gain: 1 }),
       },
@@ -134,7 +134,7 @@ export class Tracker {
     this.channels.pulse2.gainNode.connect(this.channels.pulse2.gate);
     this.channels.pulse2.gate.connect(this.masterGainNode);
 
-    // No source hooked up to the wave channel yet
+    this.channels.wave.source.connect(this.channels.wave.gainNode);
     this.channels.wave.gainNode.connect(this.channels.wave.gate);
     this.channels.wave.gate.connect(this.masterGainNode);
 
@@ -310,6 +310,7 @@ export class Tracker {
     if (!this.sourcesStarted) {
       this.channels.pulse1.source.start();
       this.channels.pulse2.source.start();
+      this.channels.wave.source.start();
       this.channels.noise.source.start();
       this.sourcesStarted = true; // Prevent starting the sources multiple times
     }
@@ -406,6 +407,7 @@ export class Tracker {
       time,
       currentPattern.cells.pulse2[this.currentRow]
     );
+    this.scheduleWaveChannel(time, currentPattern.cells.wave[this.currentRow]);
     this.scheduleNoiseChannel(
       time,
       currentPattern.cells.noise[this.currentRow]
@@ -474,6 +476,32 @@ export class Tracker {
       } else if (cell.note === "OFF") {
         // Turn off the note by setting volume to 0
         this.channels.pulse2.gainNode.gain.setValueAtTime(0, time);
+      }
+    }
+  }
+
+  private scheduleWaveChannel(time: number, cell: WaveCell) {
+    // skip scheduling if the channel is disabled
+    if (!this.getIsChannelEnabled("wave")) {
+      return;
+    }
+
+    if (cell.note !== "---") {
+      const frequency = getFrequency(cell.note);
+      if (frequency > 0) {
+        // Set wave form
+        if (cell.waveForm !== "---") {
+          this.channels.wave.source.type = cell.waveForm;
+        }
+
+        // Set frequency at the scheduled time
+        this.channels.wave.source.frequency.setValueAtTime(frequency, time);
+
+        // Set volume
+        this.channels.wave.gainNode.gain.setValueAtTime(cell.volume, time);
+      } else if (cell.note === "OFF") {
+        // Turn off the note by setting volume to 0
+        this.channels.wave.gainNode.gain.setValueAtTime(0, time);
       }
     }
   }
@@ -628,12 +656,30 @@ export class Tracker {
   }
 
   private silenceAllChannels() {
-    CHANNELS.forEach((channel) =>
+    CHANNELS.forEach((channel) => {
+      // Cancel any scheduled future volume changes
+      this.channels[channel].gainNode.gain.cancelScheduledValues(
+        this.ctx.currentTime
+      );
+
+      // Set gain to 0 for all channels
       this.channels[channel].gainNode.gain.setValueAtTime(
         0,
         this.ctx.currentTime
-      )
-    );
+      );
+
+      // cancel scheduled values for oscillator node sources
+      if (channel !== "noise") {
+        this.channels[channel].source.frequency.cancelScheduledValues(
+          this.ctx.currentTime
+        );
+
+        this.channels[channel].source.frequency.setValueAtTime(
+          0,
+          this.ctx.currentTime
+        );
+      }
+    });
   }
 
   private getPatternById(id: string): Pattern | undefined {

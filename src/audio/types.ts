@@ -15,7 +15,7 @@ export interface Channels {
     gate: GainNode;
   };
   wave: {
-    source: OscillatorNode | null;
+    source: OscillatorNode;
     gainNode: GainNode;
     gate: GainNode;
   };

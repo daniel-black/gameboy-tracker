@@ -1,3 +1,4 @@
+import { WAVE_FORMS } from "./constants";
 import { Note } from "./notes";
 import { VolumeLevel, WaveVolumeLevel } from "./volume";
 import { DutyCycle } from "./wave-shaper";
@@ -14,9 +15,11 @@ export interface Pulse2Cell {
   dutyCycle: DutyCycle;
 }
 
+export type WaveForm = (typeof WAVE_FORMS)[number];
+
 export interface WaveCell {
   note: Note;
-  waveForm: any; // idk about this yet
+  waveForm: WaveForm;
   volume: WaveVolumeLevel;
 }
 
@@ -44,7 +47,7 @@ export function createDefaultPulse2Cell(): Pulse2Cell {
 export function createDefaultWaveCell(): WaveCell {
   return {
     note: "---",
-    waveForm: null,
+    waveForm: "---",
     volume: 1,
   };
 }

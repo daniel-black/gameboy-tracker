@@ -4,6 +4,7 @@ import { NoiseCell } from "./noise-cell";
 import { PlaybackOverlay } from "./playback-overlay";
 import { Pulse1Cell } from "./pulse1-cell";
 import { Pulse2Cell } from "./pulse2-cell";
+import { WaveCell } from "./wave-cell";
 
 export function PatternGrid() {
   return (
@@ -18,6 +19,10 @@ export function PatternGrid() {
         <div className="w-[345px] px-3 font-bold space-x-3">
           <ChannelToggle channel="pulse2" />
           <span>Pulse Wave 2</span>
+        </div>
+        <div className="w-[345px] px-3 font-bold space-x-3">
+          <ChannelToggle channel="wave" />
+          <span>Wave</span>
         </div>
         <div className="w-fit px-3 font-bold space-x-3">
           <ChannelToggle channel="noise" />
@@ -40,6 +45,7 @@ export function PatternGrid() {
             </div>
             <Pulse1Cell key={`pulse1-${row}`} row={row} />
             <Pulse2Cell key={`pulse2-${row}`} row={row} />
+            <WaveCell key={`wave-${row}`} row={row} />
             <NoiseCell key={`noise-${row}`} row={row} />
           </div>
         ))}

@@ -29,3 +29,14 @@ export const CHANNELS = ["pulse1", "pulse2", "wave", "noise"] as const;
  * The maximum number of listeners allowed by the event emitter.
  */
 export const MAX_LISTENERS = 500;
+
+/**
+ * The names of waveforms.
+ */
+export const WAVE_FORMS = [
+  "sine",
+  "square",
+  "sawtooth",
+  "triangle",
+  "---",
+] as const;
