@@ -7,7 +7,6 @@ import { TrackerEventMap } from "../audio/events";
 import { Input } from "./ui/input";
 import { NoteCombobox } from "./note-combobox";
 import { DutyCycleCombobox } from "./duty-cycle-combobox";
-import { Label } from "./ui/label";
 
 export function Pulse1Cell(props: { row: number }) {
   const [cell, setCell] = useState(tracker.getPulse1Cell(props.row));
@@ -60,28 +59,20 @@ export function Pulse1Cell(props: { row: number }) {
   }
 
   return (
-    <div className="border py-0.5 h-14 px-3 hover:bg-slate-100 flex items-center gap-4">
-      <Label>
-        <span className="text-muted-foreground text-xs">N</span>
-        <NoteCombobox note={cell.note} handleNoteChange={handleNoteChange} />
-      </Label>
-      <Label>
-        <span className="text-muted-foreground text-xs">V</span>
-        <Input
-          type="number"
-          min={0}
-          max={15}
-          value={cell.volume}
-          onChange={handleVolumeChange}
-        />
-      </Label>
-      <Label>
-        <span className="text-muted-foreground text-xs">D</span>
-        <DutyCycleCombobox
-          dutyCycle={cell.dutyCycle}
-          handleDutyCycleChange={handleDutyCycleChange}
-        />
-      </Label>
+    <div className="border py-0.5 px-3 h-12 hover:bg-slate-100 flex items-center gap-4">
+      <NoteCombobox note={cell.note} handleNoteChange={handleNoteChange} />
+      <Input
+        type="number"
+        min={0}
+        max={15}
+        value={cell.volume}
+        onChange={handleVolumeChange}
+        className="w-16"
+      />
+      <DutyCycleCombobox
+        dutyCycle={cell.dutyCycle}
+        handleDutyCycleChange={handleDutyCycleChange}
+      />
     </div>
   );
 }

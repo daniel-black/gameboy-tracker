@@ -1,7 +1,6 @@
 import { TrackerEventMap } from "@/audio/events";
 import { tracker } from "@/audio/tracker";
 import { useEffect, useState } from "react";
-import { Label } from "./ui/label";
 import { NoteCombobox } from "./note-combobox";
 import { Note } from "@/audio/notes";
 import { WaveVolumeLevel } from "@/audio/volume";
@@ -60,29 +59,22 @@ export function WaveCell(props: { row: number }) {
   }
 
   return (
-    <div className="border py-0.5 h-14 px-3 hover:bg-slate-100 flex items-center gap-4">
-      <Label>
-        <span className="text-muted-foreground text-xs">N</span>
-        <NoteCombobox note={cell.note} handleNoteChange={handleNoteChange} />
-      </Label>
-      <Label>
-        <span className="text-muted-foreground text-xs">W</span>
-        <WaveFormCombobox
-          waveForm={cell.waveForm}
-          handleWaveFormChange={handleWaveFormChange}
-        />
-      </Label>
-      <Label>
-        <span className="text-muted-foreground text-xs">V</span>
-        <Input
-          type="number"
-          min={0}
-          max={1}
-          step={0.25}
-          value={cell.volume}
-          onChange={handleVolumeChange}
-        />
-      </Label>
+    <div className="border px-3 py-0.5 h-12 hover:bg-slate-100 flex items-center gap-4">
+      <NoteCombobox note={cell.note} handleNoteChange={handleNoteChange} />
+
+      <WaveFormCombobox
+        waveForm={cell.waveForm}
+        handleWaveFormChange={handleWaveFormChange}
+      />
+
+      <Input
+        type="number"
+        min={0}
+        max={1}
+        step={0.25}
+        value={cell.volume}
+        onChange={handleVolumeChange}
+      />
     </div>
   );
 }

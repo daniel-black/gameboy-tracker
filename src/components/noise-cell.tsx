@@ -1,6 +1,5 @@
 import { tracker } from "@/audio/tracker";
 import { Input } from "./ui/input";
-import { Label } from "./ui/label";
 import { useEffect, useState } from "react";
 import { TrackerEventMap } from "@/audio/events";
 import { VolumeLevel } from "@/audio/volume";
@@ -52,28 +51,25 @@ export function NoiseCell(props: { row: number }) {
   }
 
   return (
-    <div className="border py-0.5 h-14 px-3 hover:bg-slate-100 flex items-center gap-4">
-      <Label>
-        <span className="text-muted-foreground text-xs">R</span>
-        <Input
-          type="number"
-          min={-0.1}
-          max={10}
-          step={0.1}
-          value={cell.rate}
-          onChange={handleRateChange}
-        />
-      </Label>
-      <Label>
-        <span className="text-muted-foreground text-xs">V</span>
-        <Input
-          type="number"
-          min={0}
-          max={15}
-          value={cell.volume}
-          onChange={handleVolumeChange}
-        />
-      </Label>
+    <div className="border py-0.5 px-3 h-12 hover:bg-slate-100 flex items-center gap-4">
+      <Input
+        type="number"
+        min={-0.1}
+        max={10}
+        step={0.1}
+        value={cell.rate}
+        onChange={handleRateChange}
+        className="w-16"
+      />
+
+      <Input
+        type="number"
+        min={0}
+        max={15}
+        value={cell.volume}
+        onChange={handleVolumeChange}
+        className="w-16"
+      />
     </div>
   );
 }

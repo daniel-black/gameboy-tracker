@@ -57,7 +57,7 @@ export function DutyCycleCombobox(props: DutyCycleComboboxProps) {
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-[90px] justify-between"
+          className="w-[80px] justify-between"
         >
           {dutyCycleValue
             ? dutyCycles.find((cycle) => cycle.value === dutyCycleValue)!.label
@@ -65,7 +65,7 @@ export function DutyCycleCombobox(props: DutyCycleComboboxProps) {
           <ChevronsUpDown className="opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[90px] p-0">
+      <PopoverContent className="w-[80px] p-0">
         <Command>
           <CommandInput placeholder="Duty" className="h-9" />
           <CommandList>

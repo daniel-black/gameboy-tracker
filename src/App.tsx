@@ -8,10 +8,10 @@ import { Playback } from "./components/playback";
 export function App() {
   return (
     <div className="font-mono flex">
-      <div className="m-10">
+      <div className="">
         <PatternGrid />
       </div>
-      <div className="m-10 space-y-10">
+      <div className="ml-10 space-y-10">
         <div className="space-y-2">
           <p>Global Controls</p>
           <hr />
