@@ -21,7 +21,7 @@ export interface WaveCell {
 }
 
 export interface NoiseCell {
-  rate: number;
+  rate: number; // this should be something between like 0.1 and 10
   volume: VolumeLevel;
 }
 
@@ -51,7 +51,7 @@ export function createDefaultWaveCell(): WaveCell {
 
 export function createDefaultNoiseCell(): NoiseCell {
   return {
-    rate: 5,
-    volume: 5,
+    rate: 0, // off
+    volume: 15,
   };
 }

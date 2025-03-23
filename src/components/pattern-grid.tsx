@@ -1,5 +1,6 @@
 import { ROWS_PER_PATTERN } from "../audio/constants";
 import { ChannelToggle } from "./channel-toggle";
+import { NoiseCell } from "./noise-cell";
 import { PlaybackOverlay } from "./playback-overlay";
 import { Pulse1Cell } from "./pulse1-cell";
 import { Pulse2Cell } from "./pulse2-cell";
@@ -18,6 +19,10 @@ export function PatternGrid() {
           <ChannelToggle channel="pulse2" />
           <span>Pulse Wave 2</span>
         </div>
+        <div className="w-fit px-3 font-bold space-x-3">
+          <ChannelToggle channel="noise" />
+          <span>Noise</span>
+        </div>
       </div>
 
       {/* Pattern rows container */}
@@ -35,6 +40,7 @@ export function PatternGrid() {
             </div>
             <Pulse1Cell key={`pulse1-${row}`} row={row} />
             <Pulse2Cell key={`pulse2-${row}`} row={row} />
+            <NoiseCell key={`noise-${row}`} row={row} />
           </div>
         ))}
       </div>

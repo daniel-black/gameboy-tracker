@@ -67,12 +67,36 @@ export class Tracker {
     this.masterGainNode = this.ctx.createGain();
     this.masterGainNode.connect(this.ctx.destination);
 
+    // Create buffer for noise channel
+    const bufferSize = this.ctx.sampleRate * 2;
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const bufferData = buffer.getChannelData(0);
+
+    // Initialize LFSR with all bits set to 1 (as GameBoy does)
+    let lfsr = 0x7fff;
+
+    // Fill the buffer with noise generated using LFSR
+    for (let i = 0; i < bufferSize; i++) {
+      // Get output bit (bit 0)
+      const output = lfsr & 1;
+
+      // Scale to [-1, 1] for audio (0 becomes -1, 1 becomes 1)
+      bufferData[i] = output * 2 - 1;
+
+      // Shift LFSR and apply feedback
+      // XOR bits 0 and 1
+      const bit0 = lfsr & 1;
+      const bit1 = (lfsr >> 1) & 1;
+      const newBit = bit0 ^ bit1;
+
+      // Shift right by 1 and put new bit in position 15
+      lfsr = (lfsr >> 1) | (newBit << 14);
+    }
+
     // Create the channels
     this.channels = {
       pulse1: {
-        source: new OscillatorNode(this.ctx, {
-          type: "sawtooth",
-        }),
+        source: new OscillatorNode(this.ctx, { type: "sawtooth" }),
         waveShaper: new WaveShaperNode(this.ctx, {
           curve: getWaveShaperCurve(0.5),
         }),
@@ -80,9 +104,7 @@ export class Tracker {
         gate: new GainNode(this.ctx, { gain: 1 }),
       },
       pulse2: {
-        source: new OscillatorNode(this.ctx, {
-          type: "sawtooth",
-        }),
+        source: new OscillatorNode(this.ctx, { type: "sawtooth" }),
         waveShaper: new WaveShaperNode(this.ctx, {
           curve: getWaveShaperCurve(0.5),
         }),
@@ -95,7 +117,7 @@ export class Tracker {
         gate: new GainNode(this.ctx, { gain: 1 }),
       },
       noise: {
-        source: null,
+        source: new AudioBufferSourceNode(this.ctx, { buffer, loop: true }),
         gainNode: new GainNode(this.ctx, { gain: 0 }),
         gate: new GainNode(this.ctx, { gain: 1 }),
       },
@@ -116,7 +138,7 @@ export class Tracker {
     this.channels.wave.gainNode.connect(this.channels.wave.gate);
     this.channels.wave.gate.connect(this.masterGainNode);
 
-    // No source hooked up to the noise channel yet
+    this.channels.noise.source.connect(this.channels.noise.gainNode);
     this.channels.noise.gainNode.connect(this.channels.noise.gate);
     this.channels.noise.gate.connect(this.masterGainNode);
 
@@ -288,6 +310,7 @@ export class Tracker {
     if (!this.sourcesStarted) {
       this.channels.pulse1.source.start();
       this.channels.pulse2.source.start();
+      this.channels.noise.source.start();
       this.sourcesStarted = true; // Prevent starting the sources multiple times
     }
 
@@ -383,8 +406,12 @@ export class Tracker {
       time,
       currentPattern.cells.pulse2[this.currentRow]
     );
+    this.scheduleNoiseChannel(
+      time,
+      currentPattern.cells.noise[this.currentRow]
+    );
 
-    // We'll ignore wave and noise for now as they're not fully implemented
+    // We'll ignore wave for now as it is not fully implemented
 
     // Emit an event so the UI can update
     this.emitter.emit("playedRow", {
@@ -448,6 +475,23 @@ export class Tracker {
         // Turn off the note by setting volume to 0
         this.channels.pulse2.gainNode.gain.setValueAtTime(0, time);
       }
+    }
+  }
+
+  private scheduleNoiseChannel(time: number, cell: NoiseCell) {
+    // skip scheduling if the channel is disabled
+    if (!this.getIsChannelEnabled("noise")) {
+      return;
+    }
+
+    if (cell.rate > 0) {
+      this.channels.noise.source.playbackRate.setValueAtTime(cell.rate, time);
+      this.channels.noise.gainNode.gain.setValueAtTime(
+        getVolume(cell.volume),
+        time
+      );
+    } else {
+      this.channels.noise.gainNode.gain.setValueAtTime(0, time); // Turn off noise
     }
   }
 

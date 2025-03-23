@@ -20,7 +20,7 @@ export interface Channels {
     gate: GainNode;
   };
   noise: {
-    source: AudioBufferSourceNode | null;
+    source: AudioBufferSourceNode;
     gainNode: GainNode;
     gate: GainNode;
   };
