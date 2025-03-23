@@ -291,8 +291,14 @@ export class Tracker {
       this.sourcesStarted = true; // Prevent starting the sources multiple times
     }
 
-    if (this.isPaused) return this.resume();
-    if (this.isPlaying) this.stop();
+    if (this.isPaused) {
+      await this.resume();
+      return;
+    }
+
+    if (this.isPlaying) {
+      await this.stop();
+    }
 
     try {
       if (this.ctx.state === "suspended") await this.ctx.resume();
@@ -460,15 +466,17 @@ export class Tracker {
       } else {
         // We've reached the end of playback
         if (this.isLooping) {
-          console.log("Looping back to start"); // Debug log
           // Loop back to start
           this.currentPatternIndex = this.startPatternIndex;
           this.currentRow = this.startRow;
         } else {
-          console.log("Reached end, stopping playback"); // Debug log
           // End playback
           this.stopScheduler();
           this.silenceAllChannels();
+          this.emitter.emit("stoppedPlayback", {
+            row: this.currentRow,
+            patternId: this.patternOrder[this.currentPatternIndex],
+          });
           return;
         }
       }
@@ -481,14 +489,13 @@ export class Tracker {
   public async pause() {
     if (!this.isPlaying || this.isPaused) return;
 
-    this.isPaused = true;
-    this.isPlaying = false;
-
     this.stopScheduler();
 
     try {
       // Now wait for the audio context to fully suspend
       await this.ctx.suspend();
+
+      this.isPaused = true;
 
       this.emitter.emit("pausedPlayback", {
         row: this.currentRow,
@@ -499,6 +506,7 @@ export class Tracker {
       // If suspending fails, try to maintain a consistent state
       this.isPaused = false;
       this.isPlaying = true;
+
       // Restart the scheduler if there was an error
       this.scheduleIntervalId = window.setInterval(
         () => this.scheduler(),
@@ -546,7 +554,9 @@ export class Tracker {
   public async stop() {
     if (!this.isPlaying && !this.isPaused) return;
 
-    this.isPlaying = false;
+    const row = this.currentRow;
+    const patternId = this.patternOrder[this.currentPatternIndex];
+
     this.isPaused = false;
 
     // Stop the scheduler
@@ -559,7 +569,7 @@ export class Tracker {
     this.currentRow = this.startRow;
     this.currentPatternIndex = this.startPatternIndex;
 
-    this.emitter.emit("stoppedPlayback", {});
+    this.emitter.emit("stoppedPlayback", { row, patternId });
   }
 
   /**
@@ -649,6 +659,10 @@ export class Tracker {
     if (this.ctx.state === "suspended") {
       this.ctx.resume();
     }
+  }
+
+  public getMasterVolume() {
+    return this.masterGainNode.gain.value;
   }
 
   public setMasterVolume(volume: number) {

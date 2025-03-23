@@ -18,6 +18,6 @@ export interface TrackerEventMap {
   startedPlayback: { row: number; patternId: string };
   pausedPlayback: { row: number; patternId: string };
   resumedPlayback: { row: number; patternId: string };
-  stoppedPlayback: {};
+  stoppedPlayback: { row: number; patternId: string };
   playedRow: { row: number; patternId: string; time: number };
 }
