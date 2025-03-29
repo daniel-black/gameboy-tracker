@@ -7,8 +7,10 @@ import { TrackerEventMap } from "../audio/events";
 import { DutyCycleCombobox } from "./duty-cycle-combobox";
 import { NoteCombobox } from "./note-combobox";
 import { Input } from "./ui/input";
+import { useCurrentPatternId } from "@/hooks/use-current-pattern-id";
 
 export function Pulse2Cell(props: { row: number }) {
+  const [currentPatternId] = useCurrentPatternId();
   const [cell, setCell] = useState(tracker.getPulse2Cell(props.row));
 
   useEffect(() => {
@@ -59,7 +61,10 @@ export function Pulse2Cell(props: { row: number }) {
   }
 
   return (
-    <div className="border py-0.5 px-3 h-12 hover:bg-slate-100 flex items-center gap-4">
+    <div
+      className="border py-0.5 px-3 h-12 hover:bg-slate-100 flex items-center gap-4"
+      key={`${currentPatternId}-pulse2-${props.row}`}
+    >
       <NoteCombobox note={cell.note} handleNoteChange={handleNoteChange} />
       <Input
         type="number"

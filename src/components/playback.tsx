@@ -1,90 +1,55 @@
-import { TrackerEventMap } from "@/audio/events";
-import { tracker } from "@/audio/tracker";
-import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
+import { PauseIcon, PlayIcon, SquareIcon } from "lucide-react";
+import { Loop } from "./loop";
+import { usePlayback } from "@/hooks/use-playback";
 
 export function Playback() {
-  const [playbackState, setPlaybackState] = useState<
-    "stopped" | "playing" | "paused"
-  >("stopped");
+  const {
+    playbackState,
+    playCurrentPattern,
+    playSong,
+    pausePlayback,
+    stopPlayback,
+    resumePlayback,
+  } = usePlayback();
 
-  useEffect(() => {
-    const handleStartedPlaybackEvent = (
-      _: TrackerEventMap["startedPlayback"]
-    ) => {
-      setPlaybackState("playing");
-    };
-
-    const handlePausedPlaybackEvent = (
-      _: TrackerEventMap["pausedPlayback"]
-    ) => {
-      setPlaybackState("paused");
-    };
-
-    const handleResumedPlaybackEvent = (
-      _: TrackerEventMap["resumedPlayback"]
-    ) => {
-      setPlaybackState("playing");
-    };
-
-    const handleStoppedPlaybackEvent = (
-      _: TrackerEventMap["stoppedPlayback"]
-    ) => {
-      setPlaybackState("stopped");
-    };
-
-    tracker.emitter.on("startedPlayback", handleStartedPlaybackEvent);
-    tracker.emitter.on("pausedPlayback", handlePausedPlaybackEvent);
-    tracker.emitter.on("resumedPlayback", handleResumedPlaybackEvent);
-    tracker.emitter.on("stoppedPlayback", handleStoppedPlaybackEvent);
-
-    return () => {
-      tracker.emitter.off("startedPlayback", handleStartedPlaybackEvent);
-      tracker.emitter.off("pausedPlayback", handlePausedPlaybackEvent);
-      tracker.emitter.off("resumedPlayback", handleResumedPlaybackEvent);
-      tracker.emitter.off("stoppedPlayback", handleStoppedPlaybackEvent);
-    };
-  }, []);
-
-  async function handleStop() {
-    await tracker.stop();
-  }
-
-  async function handlePlay() {
-    await tracker.play();
-  }
-
-  async function handlePause() {
-    await tracker.pause();
-  }
-
-  async function handleResume() {
-    await tracker.resume();
-  }
+  const isPaused = playbackState === "paused";
+  const isPlaying = playbackState === "playing";
+  const isStopped = playbackState === "stopped";
 
   return (
     <div className="flex items-center gap-1">
+      <Button onClick={playSong}>Play song</Button>
       <Button
+        size="icon"
         onClick={async () => {
           if (playbackState === "paused") {
-            await handleResume();
+            await resumePlayback();
           } else {
-            await handlePlay();
+            await playCurrentPattern();
           }
         }}
-        disabled={playbackState === "playing"}
+        disabled={isPlaying}
       >
-        {playbackState === "paused" ? "Resume" : "Play"}
+        <PlayIcon className="w-4 h-4" />
       </Button>
       <Button
-        onClick={handlePause}
-        disabled={playbackState === "stopped" || playbackState === "paused"}
+        size="icon"
+        variant="outline"
+        onClick={pausePlayback}
+        disabled={isStopped || isPaused}
       >
-        Pause
+        <PauseIcon className="w-4 h-4" />
       </Button>
-      <Button onClick={handleStop} disabled={playbackState === "stopped"}>
-        Stop
+      <Button
+        size="icon"
+        variant="outline"
+        onClick={stopPlayback}
+        disabled={isStopped}
+      >
+        <SquareIcon className="w-4 h-4" />
       </Button>
+      <Loop />
     </div>
   );
 }

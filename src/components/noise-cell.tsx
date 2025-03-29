@@ -3,8 +3,10 @@ import { Input } from "./ui/input";
 import { useEffect, useState } from "react";
 import { TrackerEventMap } from "@/audio/events";
 import { VolumeLevel } from "@/audio/volume";
+import { useCurrentPatternId } from "@/hooks/use-current-pattern-id";
 
 export function NoiseCell(props: { row: number }) {
+  const [currentPatternId] = useCurrentPatternId();
   const [cell, setCell] = useState(tracker.getNoiseCell(props.row));
 
   useEffect(() => {
@@ -51,7 +53,10 @@ export function NoiseCell(props: { row: number }) {
   }
 
   return (
-    <div className="border py-0.5 px-3 h-12 hover:bg-slate-100 flex items-center gap-4">
+    <div
+      className="border py-0.5 px-3 h-12 hover:bg-slate-100 flex items-center gap-4"
+      key={`${currentPatternId}-noise-${props.row}`}
+    >
       <Input
         type="number"
         min={-0.1}

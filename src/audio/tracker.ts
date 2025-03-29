@@ -19,7 +19,7 @@ import {
 import { TypedEventEmitter } from "./typed-event-emmiter";
 import { getWaveShaperCurve } from "./wave-shaper";
 import { TrackerEventMap } from "./events";
-import { ChannelType, Channels, Pattern } from "./types";
+import { ChannelType, Channels, Pattern, PatternMetadata } from "./types";
 import { getFrequency } from "./notes";
 import { getVolume } from "./volume";
 
@@ -43,8 +43,8 @@ export class Tracker {
   private bpm: number;
   private isPlaying: boolean;
   private isPaused: boolean;
-  private currentRow: number;
-  private currentPatternIndex: number;
+  private currentPlaybackRow: number;
+  private currentPlaybackPatternIndex: number;
   private lookaheadTime: number;
   private scheduleIntervalTime: number;
   private scheduleIntervalId: number | null;
@@ -153,8 +153,8 @@ export class Tracker {
     this.bpm = DEFAULT_BPM;
     this.isPlaying = false;
     this.isPaused = false;
-    this.currentRow = 0;
-    this.currentPatternIndex = 0;
+    this.currentPlaybackRow = 0;
+    this.currentPlaybackPatternIndex = 0; // different from currentPatternId - this refers to the index in the patternOrder array
     this.lookaheadTime = 0.1; // 100ms
     this.scheduleIntervalTime = 50; // ms between scheduling events
     this.scheduleIntervalId = null;
@@ -191,12 +191,20 @@ export class Tracker {
   private createNewPattern(name?: string): Pattern {
     return {
       name: name || `Pattern ${this.patterns.size + 1}`,
-      id: nanoid(),
+      id: nanoid(4),
       cells: {
-        pulse1: new Array(ROWS_PER_PATTERN).fill(createDefaultPulse1Cell()),
-        pulse2: new Array(ROWS_PER_PATTERN).fill(createDefaultPulse2Cell()),
-        wave: new Array(ROWS_PER_PATTERN).fill(createDefaultWaveCell()),
-        noise: new Array(ROWS_PER_PATTERN).fill(createDefaultNoiseCell()),
+        pulse1: Array.from({ length: ROWS_PER_PATTERN }, () =>
+          createDefaultPulse1Cell()
+        ),
+        pulse2: Array.from({ length: ROWS_PER_PATTERN }, () =>
+          createDefaultPulse2Cell()
+        ),
+        wave: Array.from({ length: ROWS_PER_PATTERN }, () =>
+          createDefaultWaveCell()
+        ),
+        noise: Array.from({ length: ROWS_PER_PATTERN }, () =>
+          createDefaultNoiseCell()
+        ),
       },
     };
   }
@@ -251,12 +259,30 @@ export class Tracker {
   }
 
   public getCurrentPattern() {
-    const currentPattern = this.patterns.get(this.currentPatternId);
+    const currentPattern = this.patterns.get(this.getCurrentPatternId());
     if (!currentPattern) {
       throw new Error("no current pattern");
     }
 
     return currentPattern;
+  }
+
+  private getPatternMetadata(patternId: string): PatternMetadata {
+    const pattern = this.getPatternById(patternId);
+    if (!pattern) {
+      throw new Error("pattern not found");
+    }
+
+    return {
+      id: pattern.id,
+      name: pattern.name,
+    };
+  }
+
+  public getAllPatternsMetadata() {
+    return this.patternOrder.map((patternId) =>
+      this.getPatternMetadata(patternId)
+    );
   }
 
   public getCurrentPatternId() {
@@ -344,8 +370,8 @@ export class Tracker {
         this.startRow,
         Math.min(options.endRow ?? ROWS_PER_PATTERN - 1, ROWS_PER_PATTERN - 1)
       );
-      this.currentPatternIndex = this.startPatternIndex;
-      this.currentRow = this.startRow;
+      this.currentPlaybackPatternIndex = this.startPatternIndex;
+      this.currentPlaybackRow = this.startRow;
       this.isPlaying = true;
       this.isPaused = false;
       this.nextNoteTime = this.ctx.currentTime;
@@ -358,7 +384,7 @@ export class Tracker {
 
       // Notify listeners
       this.emitter.emit("startedPlayback", {
-        row: this.currentRow,
+        row: this.currentPlaybackRow,
         patternId: this.getCurrentPatternId(),
       });
     } catch (error) {
@@ -393,32 +419,35 @@ export class Tracker {
    * Schedule audio events for the current row at the specified time
    */
   private scheduleRow(time: number) {
-    const currentPattern = this.getPatternById(
-      this.patternOrder[this.currentPatternIndex]
+    const currentPlaybackPattern = this.getPatternById(
+      this.patternOrder[this.currentPlaybackPatternIndex]
     );
-    if (!currentPattern) return;
+    if (!currentPlaybackPattern) return;
 
     // Schedule each channel for this row
     this.schedulePulse1Channel(
       time,
-      currentPattern.cells.pulse1[this.currentRow]
+      currentPlaybackPattern.cells.pulse1[this.currentPlaybackRow]
     );
     this.schedulePulse2Channel(
       time,
-      currentPattern.cells.pulse2[this.currentRow]
+      currentPlaybackPattern.cells.pulse2[this.currentPlaybackRow]
     );
-    this.scheduleWaveChannel(time, currentPattern.cells.wave[this.currentRow]);
+    this.scheduleWaveChannel(
+      time,
+      currentPlaybackPattern.cells.wave[this.currentPlaybackRow]
+    );
     this.scheduleNoiseChannel(
       time,
-      currentPattern.cells.noise[this.currentRow]
+      currentPlaybackPattern.cells.noise[this.currentPlaybackRow]
     );
 
     // We'll ignore wave for now as it is not fully implemented
 
     // Emit an event so the UI can update
     this.emitter.emit("playedRow", {
-      row: this.currentRow,
-      patternId: currentPattern.id,
+      row: this.currentPlaybackRow,
+      patternId: currentPlaybackPattern.id,
       time,
     });
   }
@@ -527,27 +556,30 @@ export class Tracker {
    * Advance the playhead to the next row, handling pattern changes and looping
    */
   private advancePlayhead() {
-    this.currentRow++;
+    this.currentPlaybackRow++;
 
     // Check if we've reached the end of the current pattern's rows
-    if (this.currentRow > this.endRow) {
+    if (this.currentPlaybackRow > this.endRow) {
       // Move to the next pattern if there is one
-      if (this.currentPatternIndex < this.endPatternIndex) {
-        this.currentPatternIndex++;
-        this.currentRow = 0; // Start at the beginning of the next pattern
+      if (this.currentPlaybackPatternIndex < this.endPatternIndex) {
+        this.currentPlaybackPatternIndex++;
+        this.currentPlaybackRow = 0; // Start at the beginning of the next pattern
+        this.emitter.emit("changedCurrentPattern", {
+          patternId: this.patternOrder[this.currentPlaybackPatternIndex],
+        });
       } else {
         // We've reached the end of playback
         if (this.isLooping) {
           // Loop back to start
-          this.currentPatternIndex = this.startPatternIndex;
-          this.currentRow = this.startRow;
+          this.currentPlaybackPatternIndex = this.startPatternIndex;
+          this.currentPlaybackRow = this.startRow;
         } else {
           // End playback
           this.stopScheduler();
           this.silenceAllChannels();
           this.emitter.emit("stoppedPlayback", {
-            row: this.currentRow,
-            patternId: this.patternOrder[this.currentPatternIndex],
+            row: this.currentPlaybackRow,
+            patternId: this.patternOrder[this.currentPlaybackPatternIndex],
           });
           return;
         }
@@ -570,8 +602,8 @@ export class Tracker {
       this.isPaused = true;
 
       this.emitter.emit("pausedPlayback", {
-        row: this.currentRow,
-        patternId: this.patternOrder[this.currentPatternIndex],
+        row: this.currentPlaybackRow,
+        patternId: this.patternOrder[this.currentPlaybackPatternIndex],
       });
     } catch (error) {
       console.error("Error suspending audio context:", error);
@@ -610,8 +642,8 @@ export class Tracker {
       );
 
       this.emitter.emit("resumedPlayback", {
-        row: this.currentRow,
-        patternId: this.patternOrder[this.currentPatternIndex],
+        row: this.currentPlaybackRow,
+        patternId: this.patternOrder[this.currentPlaybackPatternIndex],
       });
     } catch (error) {
       console.error("Error resuming audio context:", error);
@@ -626,8 +658,8 @@ export class Tracker {
   public async stop() {
     if (!this.isPlaying && !this.isPaused) return;
 
-    const row = this.currentRow;
-    const patternId = this.patternOrder[this.currentPatternIndex];
+    const row = this.currentPlaybackRow;
+    const patternId = this.patternOrder[this.currentPlaybackPatternIndex];
 
     this.isPaused = false;
 
@@ -638,8 +670,8 @@ export class Tracker {
     this.silenceAllChannels();
 
     // Reset playback position
-    this.currentRow = this.startRow;
-    this.currentPatternIndex = this.startPatternIndex;
+    this.currentPlaybackRow = this.startRow;
+    this.currentPlaybackPatternIndex = this.startPatternIndex;
 
     this.emitter.emit("stoppedPlayback", { row, patternId });
   }
@@ -692,14 +724,14 @@ export class Tracker {
   public async playCurrentPattern(
     options: { startRow?: number; endRow?: number } = {}
   ) {
-    const currentPatternIndex = this.patternOrder.indexOf(
-      this.currentPatternId
+    const currentPlaybackPatternIndex = this.patternOrder.indexOf(
+      this.getCurrentPatternId()
     );
-    if (currentPatternIndex === -1) return;
+    if (currentPlaybackPatternIndex === -1) return;
 
     await this.play({
-      startPatternIndex: currentPatternIndex,
-      endPatternIndex: currentPatternIndex,
+      startPatternIndex: currentPlaybackPatternIndex,
+      endPatternIndex: currentPlaybackPatternIndex,
       startRow: options.startRow ?? 0,
       endRow: options.endRow ?? ROWS_PER_PATTERN - 1,
     });
@@ -723,14 +755,14 @@ export class Tracker {
    * Play a section of the current pattern
    */
   public async playSection(startRow: number, endRow: number) {
-    const currentPatternIndex = this.patternOrder.indexOf(
-      this.currentPatternId
+    const currentPlaybackPatternIndex = this.patternOrder.indexOf(
+      this.getCurrentPatternId()
     );
-    if (currentPatternIndex === -1) return;
+    if (currentPlaybackPatternIndex === -1) return;
 
     await this.play({
-      startPatternIndex: currentPatternIndex,
-      endPatternIndex: currentPatternIndex,
+      startPatternIndex: currentPlaybackPatternIndex,
+      endPatternIndex: currentPlaybackPatternIndex,
       startRow,
       endRow,
     });

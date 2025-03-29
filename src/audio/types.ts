@@ -37,4 +37,6 @@ export interface Pattern {
   };
 }
 
+export type PatternMetadata = Omit<Pattern, "cells">;
+
 export type ChannelType = (typeof CHANNELS)[number];

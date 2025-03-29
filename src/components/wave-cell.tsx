@@ -7,8 +7,10 @@ import { WaveVolumeLevel } from "@/audio/volume";
 import { Input } from "./ui/input";
 import { WaveFormCombobox } from "./wave-form-combobox";
 import { WaveForm } from "@/audio/cell";
+import { useCurrentPatternId } from "@/hooks/use-current-pattern-id";
 
 export function WaveCell(props: { row: number }) {
+  const [currentPatternId] = useCurrentPatternId();
   const [cell, setCell] = useState(tracker.getWaveCell(props.row));
 
   useEffect(() => {
@@ -59,7 +61,10 @@ export function WaveCell(props: { row: number }) {
   }
 
   return (
-    <div className="border px-3 py-0.5 h-12 hover:bg-slate-100 flex items-center gap-4">
+    <div
+      className="border px-3 py-0.5 h-12 hover:bg-slate-100 flex items-center gap-4"
+      key={`${currentPatternId}-wave-${props.row}`}
+    >
       <NoteCombobox note={cell.note} handleNoteChange={handleNoteChange} />
 
       <WaveFormCombobox

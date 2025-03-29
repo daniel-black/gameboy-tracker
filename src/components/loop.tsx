@@ -1,20 +1,13 @@
-import { Checkbox } from "./ui/checkbox";
-import { Label } from "./ui/label";
 import { useLooping } from "@/hooks/use-looping";
+import { Toggle } from "./ui/toggle";
+import { Repeat2Icon } from "lucide-react";
 
 export function Loop() {
   const [isLooping, toggleLooping] = useLooping();
 
   return (
-    <div>
-      <Label htmlFor="loop-control">
-        <Checkbox
-          id="loop-control"
-          checked={isLooping}
-          onCheckedChange={toggleLooping}
-        />
-        <span>Loop</span>
-      </Label>
-    </div>
+    <Toggle variant={"outline"} pressed={isLooping} onClick={toggleLooping}>
+      <Repeat2Icon className="w-4 h-4" />
+    </Toggle>
   );
 }
