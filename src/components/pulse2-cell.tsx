@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { tracker } from "../audio/tracker";
 import { Note } from "../audio/notes";
-import { VolumeLevel } from "../audio/volume";
+import { isVolumeLevel } from "../audio/volume";
 import { DutyCycle } from "../audio/wave-shaper";
 import { TrackerEventMap } from "../audio/events";
 import { DutyCycleCombobox } from "./duty-cycle-combobox";
 import { NoteCombobox } from "./note-combobox";
-import { Input } from "./ui/input";
 import { useCurrentPatternId } from "@/hooks/use-current-pattern-id";
+import { VolumeInput } from "./volume-input";
 
 export function Pulse2Cell(props: { row: number }) {
   const [currentPatternId] = useCurrentPatternId();
@@ -49,10 +49,13 @@ export function Pulse2Cell(props: { row: number }) {
   }
 
   function handleVolumeChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const parsedVolume = parseInt(e.target.value, 10);
-    if (isNaN(parsedVolume) || parsedVolume < 0 || parsedVolume > 15) return;
-    const newCell = { ...cell, volume: parsedVolume as VolumeLevel };
-    tracker.setPulse2Cell(props.row, newCell);
+    const inputValue = parseInt(e.target.value, 10);
+    if (isVolumeLevel(inputValue)) {
+      const newCell = { ...cell, volume: inputValue };
+      tracker.setPulse2Cell(props.row, newCell);
+    } else {
+      console.error(`Invalid volume level: ${inputValue}`);
+    }
   }
 
   function handleDutyCycleChange(newDutyCycle: DutyCycle) {
@@ -62,17 +65,13 @@ export function Pulse2Cell(props: { row: number }) {
 
   return (
     <div
-      className="border py-0.5 px-3 h-12 hover:bg-slate-100 flex items-center gap-4"
+      className="border p-1 h-8 hover:bg-slate-100 flex items-center gap-1"
       key={`${currentPatternId}-pulse2-${props.row}`}
     >
       <NoteCombobox note={cell.note} handleNoteChange={handleNoteChange} />
-      <Input
-        type="number"
-        min={0}
-        max={15}
-        value={cell.volume}
-        onChange={handleVolumeChange}
-        className="w-16"
+      <VolumeInput
+        volume={cell.volume}
+        handleVolumeChange={handleVolumeChange}
       />
       <DutyCycleCombobox
         dutyCycle={cell.dutyCycle}

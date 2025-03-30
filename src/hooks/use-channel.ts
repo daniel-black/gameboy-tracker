@@ -2,18 +2,17 @@ import { TrackerEventMap } from "@/audio/events";
 import { tracker } from "@/audio/tracker";
 import { ChannelType } from "@/audio/types";
 import { useEffect, useState } from "react";
-import { Checkbox } from "./ui/checkbox";
 
-export function ChannelToggle(props: { channel: ChannelType }) {
+export function useChannel(channel: ChannelType) {
   const [isChannelEnabled, setIsChannelEnabled] = useState(
-    tracker.getIsChannelEnabled(props.channel)
+    tracker.getIsChannelEnabled(channel)
   );
 
   useEffect(() => {
     const handleToggledChannelEvent = (
       eventData: TrackerEventMap["toggledChannel"]
     ) => {
-      if (eventData.channel === props.channel) {
+      if (eventData.channel === channel) {
         setIsChannelEnabled(eventData.enabled);
       }
     };
@@ -25,14 +24,12 @@ export function ChannelToggle(props: { channel: ChannelType }) {
     };
   }, []);
 
-  function handleChannelToggle() {
-    tracker.toggleChannel(props.channel);
+  function toggleChannel() {
+    tracker.toggleChannel(channel);
   }
 
-  return (
-    <Checkbox
-      checked={isChannelEnabled}
-      onCheckedChange={handleChannelToggle}
-    />
-  );
+  return {
+    isChannelEnabled,
+    toggleChannel,
+  } as const;
 }

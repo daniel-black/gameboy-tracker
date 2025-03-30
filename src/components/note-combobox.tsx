@@ -72,13 +72,13 @@ export function NoteCombobox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-[90px] justify-between"
+          className="w-[85px] justify-between h-6 rounded-sm text-xs px-1.5 py-1"
         >
           {getSelectedNoteLabel()}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <ChevronsUpDown className="ml-2 size-3 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[90px] p-0">
+      <PopoverContent className="w-[85px] p-0">
         <Command>
           <CommandInput placeholder="Note" />
           <CommandList>
@@ -96,10 +96,11 @@ export function NoteCombobox({
                       handleNoteChange(newNoteValue);
                       setOpen(false);
                     }}
+                    className="text-xs"
                   >
                     <Check
                       className={cn(
-                        "mr-2 h-4 w-4",
+                        "mr-2 size-3",
                         noteValue === note.value ? "opacity-100" : "opacity-0"
                       )}
                     />

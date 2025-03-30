@@ -35,13 +35,13 @@ export function WaveFormCombobox(props: WaveformComboboxProps) {
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-[110px] justify-between"
+          className="w-[100px] justify-between h-6 rounded-sm text-xs px-1.5 py-1"
         >
           {WAVE_FORMS.find((wf) => wf === waveForm) ?? "Wave"}
           <ChevronsUpDown className="opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[110px] p-0">
+      <PopoverContent className="w-[100px] p-0">
         <Command>
           <CommandInput placeholder="Wave" className="h-9" />
           <CommandList>
@@ -59,11 +59,12 @@ export function WaveFormCombobox(props: WaveformComboboxProps) {
                     props.handleWaveFormChange(newWaveForm);
                     setOpen(false);
                   }}
+                  className="text-xs"
                 >
                   {wf}
                   <Check
                     className={cn(
-                      "ml-auto",
+                      "ml-auto size-3",
                       wf === waveForm ? "opacity-100" : "opacity-0"
                     )}
                   />

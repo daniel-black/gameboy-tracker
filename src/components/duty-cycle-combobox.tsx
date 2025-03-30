@@ -57,7 +57,7 @@ export function DutyCycleCombobox(props: DutyCycleComboboxProps) {
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-[80px] justify-between"
+          className="w-[80px] justify-between h-6 rounded-sm text-xs px-1.5 py-1"
         >
           {dutyCycleValue
             ? dutyCycles.find((cycle) => cycle.value === dutyCycleValue)!.label
@@ -83,11 +83,12 @@ export function DutyCycleCombobox(props: DutyCycleComboboxProps) {
                     props.handleDutyCycleChange(newDutyCycleValue);
                     setOpen(false);
                   }}
+                  className="text-xs"
                 >
                   {dutyCycle.label}
                   <Check
                     className={cn(
-                      "ml-auto",
+                      "ml-auto size-3",
                       dutyCycleValue === dutyCycle.value
                         ? "opacity-100"
                         : "opacity-0"

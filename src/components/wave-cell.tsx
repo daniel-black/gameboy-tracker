@@ -3,11 +3,12 @@ import { tracker } from "@/audio/tracker";
 import { useEffect, useState } from "react";
 import { NoteCombobox } from "./note-combobox";
 import { Note } from "@/audio/notes";
-import { WaveVolumeLevel } from "@/audio/volume";
+import { isWaveVolumeLevel, WaveVolumeLevel } from "@/audio/volume";
 import { Input } from "./ui/input";
 import { WaveFormCombobox } from "./wave-form-combobox";
 import { WaveForm } from "@/audio/cell";
 import { useCurrentPatternId } from "@/hooks/use-current-pattern-id";
+import { VolumeInput } from "./volume-input";
 
 export function WaveCell(props: { row: number }) {
   const [currentPatternId] = useCurrentPatternId();
@@ -49,10 +50,28 @@ export function WaveCell(props: { row: number }) {
   }
 
   function handleVolumeChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const parsedVolume = parseInt(e.target.value, 10);
-    if (isNaN(parsedVolume) || parsedVolume < 0 || parsedVolume > 1) return;
-    const newCell = { ...cell, volume: parsedVolume as WaveVolumeLevel };
-    tracker.setWaveCell(props.row, newCell);
+    let inputValue = parseFloat(e.target.value);
+
+    if (inputValue === 0.75) {
+      // volume increasing
+      if (cell.volume === 0.5) {
+        inputValue = 1;
+      }
+      // volume decreasing
+      else if (cell.volume === 1) {
+        inputValue = 0.5;
+      }
+    }
+
+    if (isWaveVolumeLevel(inputValue)) {
+      tracker.setWaveCell(props.row, { ...cell, volume: inputValue });
+    } else {
+      console.error(`Invalid volume level: ${inputValue}`);
+    }
+
+    // if (isNaN(parsedVolume) || parsedVolume < 0 || parsedVolume > 1) return;
+    // const newCell = { ...cell, volume: parsedVolume as WaveVolumeLevel };
+    // tracker.setWaveCell(props.row, newCell);
   }
 
   function handleWaveFormChange(newWaveForm: WaveForm) {
@@ -62,7 +81,7 @@ export function WaveCell(props: { row: number }) {
 
   return (
     <div
-      className="border px-3 py-0.5 h-12 hover:bg-slate-100 flex items-center gap-4"
+      className="border p-1 h-8 hover:bg-slate-100 flex items-center gap-1"
       key={`${currentPatternId}-wave-${props.row}`}
     >
       <NoteCombobox note={cell.note} handleNoteChange={handleNoteChange} />
@@ -72,13 +91,11 @@ export function WaveCell(props: { row: number }) {
         handleWaveFormChange={handleWaveFormChange}
       />
 
-      <Input
-        type="number"
-        min={0}
+      <VolumeInput
+        volume={cell.volume}
+        handleVolumeChange={handleVolumeChange}
         max={1}
         step={0.25}
-        value={cell.volume}
-        onChange={handleVolumeChange}
       />
     </div>
   );

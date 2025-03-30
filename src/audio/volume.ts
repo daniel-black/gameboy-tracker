@@ -22,3 +22,62 @@ export function getVolume(volumeLevel: VolumeLevel) {
 }
 
 export type WaveVolumeLevel = 0 | 0.25 | 0.5 | 1;
+
+/**
+ * Checks if a value is a valid VolumeLevel (0-15)
+ * @param value The value to check
+ * @returns A type predicate indicating whether the value is a VolumeLevel
+ */
+export function isVolumeLevel(value: unknown): value is VolumeLevel {
+  // Check if value is a number
+  if (typeof value !== "number") return false;
+
+  // Check if value is an integer
+  if (!Number.isInteger(value)) return false;
+
+  // Check if value is within the valid range [0, 15]
+  return value >= 0 && value <= 15;
+}
+
+/**
+ * Asserts that a value is a valid VolumeLevel
+ * @param value The value to check
+ * @throws Error if the value is not a valid VolumeLevel
+ */
+export function assertVolumeLevel(
+  value: unknown
+): asserts value is VolumeLevel {
+  if (!isVolumeLevel(value)) {
+    throw new Error(
+      `Expected a volume level between 0 and 15, but got: ${value}`
+    );
+  }
+}
+
+/**
+ * Checks if a value is a valid WaveVolumeLevel (0, 0.25, 0.5, or 1)
+ * @param value The value to check
+ * @returns A type predicate indicating whether the value is a WaveVolumeLevel
+ */
+export function isWaveVolumeLevel(value: unknown): value is WaveVolumeLevel {
+  // Check if value is a number
+  if (typeof value !== "number") return false;
+
+  // Check if value is one of the specific allowed values
+  return value === 0 || value === 0.25 || value === 0.5 || value === 1;
+}
+
+/**
+ * Asserts that a value is a valid WaveVolumeLevel
+ * @param value The value to check
+ * @throws Error if the value is not a valid WaveVolumeLevel
+ */
+export function assertWaveVolumeLevel(
+  value: unknown
+): asserts value is WaveVolumeLevel {
+  if (!isWaveVolumeLevel(value)) {
+    throw new Error(
+      `Expected a wave volume level of 0, 0.25, 0.5, or 1, but got: ${value}`
+    );
+  }
+}

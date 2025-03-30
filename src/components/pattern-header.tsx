@@ -1,24 +1,22 @@
-import { ChannelToggle } from "./channel-toggle";
+import { ChannelLabel } from "./channel-label";
 
 export function PatternHeader() {
   return (
-    <div className="sticky top-0 z-10 flex bg-secondary h-12 items-center border shadow-sm">
-      <div className="w-[46px]"></div>
-      <div className="w-[298px] px-3 font-bold space-x-3">
-        <ChannelToggle channel="pulse1" />
-        <span>Pulse Wave 1</span>
+    <div className="fixed top-0 z-10 flex bg-secondary h-[4vh] items-center border shadow-sm">
+      {/* This first div is the width of the row numbers column */}
+      <div className="w-[32px]" />
+
+      <div className="w-[231px] px-3 font-bold space-x-3">
+        <ChannelLabel channel="pulse1" />
       </div>
-      <div className="w-[298px] px-3 font-bold space-x-3">
-        <ChannelToggle channel="pulse2" />
-        <span>Pulse Wave 2</span>
+      <div className="w-[231px] px-3 font-bold space-x-3">
+        <ChannelLabel channel="pulse2" />
       </div>
-      <div className="w-[333px] px-3 font-bold space-x-3">
-        <ChannelToggle channel="wave" />
-        <span>Wave</span>
+      <div className="w-[265px] px-3 font-bold space-x-3">
+        <ChannelLabel channel="wave" />
       </div>
-      <div className="w-fit px-3 font-bold space-x-3">
-        <ChannelToggle channel="noise" />
-        <span>Noise</span>
+      <div className="w-[122px] px-3 font-bold space-x-3">
+        <ChannelLabel channel="noise" />
       </div>
     </div>
   );
