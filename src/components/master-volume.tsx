@@ -11,12 +11,13 @@ export function MasterVolume() {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 max-w-28">
       <div className="flex justify-between">
-        <Label className="flex flex-col">Master Volume</Label>
+        <Label htmlFor="master-volume">Vol.</Label>
         <span className="text-sm">{Math.trunc(masterVolume * 100)}%</span>
       </div>
       <Slider
+        id="master-volume"
         defaultValue={[masterVolume]}
         min={-0.01} // confused about this
         max={1}

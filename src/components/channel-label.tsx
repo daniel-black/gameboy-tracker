@@ -21,7 +21,9 @@ export function ChannelLabel(props: { channel: ChannelType }) {
         checked={isChannelEnabled}
         onCheckedChange={toggleChannel}
       />
-      <Label htmlFor={toggleId}>{channelLabels[props.channel]}</Label>
+      <Label htmlFor={toggleId} className="text-xs">
+        {channelLabels[props.channel]}
+      </Label>
     </div>
   );
 }

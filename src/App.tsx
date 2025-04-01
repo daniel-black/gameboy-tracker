@@ -1,20 +1,19 @@
 import "./app.css";
 import { BPM } from "./components/bpm";
-import { ChannelLabel } from "./components/channel-label";
+import { Grid } from "./components/grid";
 import { MasterVolume } from "./components/master-volume";
-import { PatternGrid } from "./components/pattern-grid";
-import { PatternHeader } from "./components/pattern-header";
-import { PatternManager } from "./components/pattern-manager";
 import { Playback } from "./components/playback";
 
 export function App() {
   return (
     <div className="font-mono w-screen h-screen flex">
+      {/* Left half of screen - grid */}
       <div>
-        <PatternHeader />
-        <PatternGrid />
+        <Grid />
       </div>
-      <div className="ml-10 space-y-10">
+
+      {/* Right half of screen - controls & config */}
+      <div className="m-5 space-y-10 flex-1">
         <div className="flex items-center gap-5">
           <Playback />
         </div>
@@ -24,8 +23,6 @@ export function App() {
           </div>
           <MasterVolume />
         </div>
-        <PatternManager />
-        <ChannelLabel channel="pulse1" />
       </div>
     </div>
   );

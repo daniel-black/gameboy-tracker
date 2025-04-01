@@ -4,43 +4,43 @@ import { VolumeLevel, WaveVolumeLevel } from "./volume";
 import { DutyCycle } from "./wave-shaper";
 
 export interface Pulse1Cell {
-  note: Note;
-  volume: VolumeLevel;
-  dutyCycle: DutyCycle;
+  note: string;
+  volume: string;
+  dutyCycle: string;
 }
 
 export interface Pulse2Cell {
-  note: Note;
-  volume: VolumeLevel;
-  dutyCycle: DutyCycle;
+  note: string;
+  volume: string;
+  dutyCycle: string;
 }
 
 export type WaveForm = (typeof WAVE_FORMS)[number];
 
 export interface WaveCell {
-  note: Note;
-  waveForm: WaveForm;
-  volume: WaveVolumeLevel;
+  note: string;
+  waveForm: string;
+  volume: string;
 }
 
 export interface NoiseCell {
-  rate: number; // this should be something between like 0.1 and 10
-  volume: VolumeLevel;
+  rate: string; // this should be something between like 0.1 and 10
+  volume: string;
 }
 
 export function createDefaultPulse1Cell(): Pulse1Cell {
   return {
     note: "---",
-    volume: 15,
-    dutyCycle: 0.5,
+    volume: "--",
+    dutyCycle: "--",
   };
 }
 
 export function createDefaultPulse2Cell(): Pulse2Cell {
   return {
     note: "---",
-    volume: 15,
-    dutyCycle: 0.5,
+    volume: "--",
+    dutyCycle: "--",
   };
 }
 
@@ -48,13 +48,13 @@ export function createDefaultWaveCell(): WaveCell {
   return {
     note: "---",
     waveForm: "---",
-    volume: 1,
+    volume: "---",
   };
 }
 
 export function createDefaultNoiseCell(): NoiseCell {
   return {
-    rate: 0, // off
-    volume: 15,
+    rate: "---", // off
+    volume: "--",
   };
 }

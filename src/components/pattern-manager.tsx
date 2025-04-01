@@ -45,33 +45,27 @@ export function PatternManager() {
   }
 
   return (
-    <div className="border p-1">
-      <div className="flex items-center justify-between p-2">
+    <div className="border p-1 rounded">
+      <div className="flex items-center justify-between p-2 text-sm">
         <h3>Patterns</h3>
-        <Button onClick={addNewPattern} size="icon">
-          <PlusIcon className="w-4 h-4" />
+        <Button onClick={addNewPattern} size="sm" variant="secondary">
+          <PlusIcon className="size-3" />
         </Button>
       </div>
-      <ScrollArea className="h-72 w-56 rounded-md border">
-        <div className="p-4">
+
+      <ScrollArea className="h-44 w-32 rounded-md border">
+        <div className="p-2">
           {patternsData.map((pattern) => (
             <div key={pattern.id}>
-              <div className="flex items-center justify-between">
-                <span
-                  onClick={() => setCurrentPattern(pattern.id)}
-                  className={`text-sm ${
-                    pattern.id === currentPatternId
-                      ? "bg-green-200 rounded"
-                      : ""
-                  }`}
-                >
-                  {pattern.name}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {pattern.id}
-                </span>
-              </div>
-              <Separator className="my-2" />
+              <span
+                onClick={() => setCurrentPattern(pattern.id)}
+                className={`text-xs ${
+                  pattern.id === currentPatternId ? "bg-green-200 rounded" : ""
+                }`}
+              >
+                {pattern.name}
+              </span>
+              <Separator className="my-1" />
             </div>
           ))}
         </div>

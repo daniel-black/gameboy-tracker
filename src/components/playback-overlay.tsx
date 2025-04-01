@@ -63,9 +63,9 @@ export function PlaybackOverlay() {
 
     return (
       <div
-        className="absolute left-0 right-0 h-14 bg-blue-100 opacity-30 pointer-events-none z-10 border-y-2 border-x-2 border-blue-400 transition-transform duration-75"
+        className="absolute left-0 right-0 h-8 bg-blue-100 opacity-30 pointer-events-none z-10 border-y-2 border-x-2 border-blue-400 transition-transform duration-75"
         style={{
-          transform: `translateY(${currentRow * 56}px)`, // 56px = height of row (h-14 = 3.5rem = 56px)
+          transform: `translateY(${currentRow * 32}px)`, // 32px = height of row (h-8 = 2rem = 32px)
         }}
       />
     );
@@ -77,9 +77,9 @@ export function PlaybackOverlay() {
 
   return (
     <div
-      className="absolute left-0 right-0 h-14 bg-blue-200 opacity-30 pointer-events-none z-10 border-y-2 border-x-2 border-blue-400 transition-transform duration-75"
+      className="absolute left-0 right-0 h-8 bg-blue-200 opacity-30 pointer-events-none z-10 border-y-2 border-x-2 border-blue-400 transition-transform duration-75"
       style={{
-        transform: `translateY(${currentRow * 56}px)`, // 56px = height of row (h-14 = 3.5rem = 56px)
+        transform: `translateY(${currentRow * 32}px)`, // 32px = height of row (h-8 = 2rem = 32px)
       }}
     />
   );

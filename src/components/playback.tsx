@@ -7,7 +7,7 @@ export function Playback() {
   const {
     playbackState,
     playCurrentPattern,
-    playSong,
+    // playSong,
     pausePlayback,
     stopPlayback,
     resumePlayback,
@@ -19,7 +19,7 @@ export function Playback() {
 
   return (
     <div className="flex items-center gap-1">
-      <Button onClick={playSong}>Play song</Button>
+      {/* <Button onClick={playSong}>Play song</Button> */}
       <Button
         size="icon"
         onClick={async () => {
