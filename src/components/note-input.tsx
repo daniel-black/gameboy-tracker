@@ -1,9 +1,3 @@
-type NoteInputProps = {
-  value: string;
-  onChange: (value: string) => void;
-  setPreviousCellAsActive: () => void;
-};
-
 // Valid first characters (note names and special characters)
 const validFirstChars = ["C", "D", "E", "F", "G", "A", "B", "O", "-"];
 
@@ -15,7 +9,17 @@ const validSecondChars = ["-", "#"];
 // Valid third characters (octave numbers)
 const validThirdChars = ["2", "3", "4", "5", "6", "7", "F"];
 
-export function NoteInput(props: NoteInputProps) {
+type NoteInputProps = {
+  note: string;
+  setNote: (value: string) => void;
+  setPreviousCellAsActive: () => void;
+};
+
+export function NoteInput({
+  note,
+  setNote,
+  setPreviousCellAsActive,
+}: NoteInputProps) {
   function handleNoteChange(e: React.ChangeEvent<HTMLInputElement>) {
     // Prevent more than 3 characters
     if (e.target.value.length > 3) return;
@@ -24,14 +28,14 @@ export function NoteInput(props: NoteInputProps) {
     const input = e.target.value.toUpperCase();
 
     // Shortcut for "---" from empty
-    if (props.value === "" && input === "-") {
-      props.onChange("---");
+    if (note === "" && input === "-") {
+      setNote("---");
       return;
     }
 
     // Shortcut for "OFF" from empty
-    if (props.value === "" && input === "O") {
-      props.onChange("OFF");
+    if (note === "" && input === "O") {
+      setNote("OFF");
       return;
     }
 
@@ -71,39 +75,39 @@ export function NoteInput(props: NoteInputProps) {
     }
 
     if (isValid) {
-      props.onChange(input);
+      setNote(input);
     }
   }
 
   function handleNoteKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Backspace") {
-      if (props.value === "---" || props.value === "OFF") {
+      if (note === "---" || note === "OFF") {
         e.preventDefault();
 
-        props.onChange("");
+        setNote("");
         return;
       }
     }
 
-    if (e.key === "-" && props.value.length === 3) {
-      props.onChange("---");
+    if (e.key === "-" && note.length === 3) {
+      setNote("---");
       return;
     }
 
-    if (e.key === "o" && props.value.length === 3) {
-      props.onChange("OFF");
+    if (e.key === "o" && note.length === 3) {
+      setNote("OFF");
       return;
     }
 
     if (e.key === "Tab" && e.shiftKey) {
-      props.setPreviousCellAsActive();
+      setPreviousCellAsActive();
       return;
     }
   }
 
   function handleNoteBlur() {
-    if (props.value.length !== 3) {
-      props.onChange("---");
+    if (note.length !== 3) {
+      setNote("---");
     }
   }
 
@@ -113,7 +117,7 @@ export function NoteInput(props: NoteInputProps) {
       maxLength={3}
       placeholder="⋅⋅⋅"
       className="w-6 focus:outline-0 invalid:bg-red-200"
-      value={props.value}
+      value={note}
       onChange={handleNoteChange}
       onKeyDown={handleNoteKeyDown}
       onBlur={handleNoteBlur}

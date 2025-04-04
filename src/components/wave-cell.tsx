@@ -7,6 +7,8 @@ export function WaveCell(props: { row: number }) {
   const [cell, setCell] = useWaveCell(props.row);
   const setActiveCell = useSetAtom(activeCellAtom);
 
+  const setNote = (newNote: string) => setCell({ ...cell, note: newNote });
+
   function handleVolumeChange(e: React.ChangeEvent<HTMLInputElement>) {
     if (e.target.value.length > 3) return;
 
@@ -40,8 +42,8 @@ export function WaveCell(props: { row: number }) {
     <>
       {/* Note */}
       <NoteInput
-        value={cell.note}
-        onChange={(newNote: string) => setCell({ ...cell, note: newNote })}
+        note={cell.note}
+        setNote={setNote}
         setPreviousCellAsActive={setPreviousCellAsActive}
       />
 

@@ -2,33 +2,18 @@ import { usePulse2Cell } from "@/hooks/use-pulse2-cell";
 import { activeCellAtom } from "@/store";
 import { useSetAtom } from "jotai";
 import { NoteInput } from "./note-input";
+import { VolumeInput } from "./volume-input";
+import { DutyCycleInput } from "./duty-cycle-input";
 
 export function Pulse2Cell(props: { row: number }) {
   const [cell, setCell] = usePulse2Cell(props.row);
   const setActiveCell = useSetAtom(activeCellAtom);
 
-  function handleVolumeChange(e: React.ChangeEvent<HTMLInputElement>) {
-    if (e.target.value.length > 2) return;
-
-    const newCell = { ...cell, volume: e.target.value };
-    setCell(newCell);
-  }
-
-  function handleDutyCycleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    if (e.target.value.length > 2) return;
-
-    const newCell = { ...cell, dutyCycle: e.target.value };
-    setCell(newCell);
-  }
-
-  function handleTabToNextCell(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Tab" && !e.shiftKey) {
-      // Let the default tab behavior work, but update the active cell
-      setTimeout(() => {
-        setActiveCell({ row: props.row, col: 2 });
-      }, 0);
-    }
-  }
+  const setNote = (newNote: string) => setCell({ ...cell, note: newNote });
+  const setVolume = (newVolume: string) =>
+    setCell({ ...cell, volume: newVolume });
+  const setDutyCycle = (newDutyCycle: string) =>
+    setCell({ ...cell, dutyCycle: newDutyCycle });
 
   function setPreviousCellAsActive() {
     setTimeout(() => {
@@ -36,32 +21,26 @@ export function Pulse2Cell(props: { row: number }) {
     }, 0);
   }
 
+  function setNextCellAsActive() {
+    setTimeout(() => {
+      setActiveCell({ row: props.row, col: 2 });
+    }, 0);
+  }
+
   return (
     <>
-      {/* Note */}
       <NoteInput
-        value={cell.note}
-        onChange={(newNote: string) => setCell({ ...cell, note: newNote })}
+        note={cell.note}
+        setNote={setNote}
         setPreviousCellAsActive={setPreviousCellAsActive}
       />
 
-      {/* Volume */}
-      <input
-        type="text"
-        placeholder="⋅⋅"
-        className="w-4 focus:outline-0"
-        value={cell.volume}
-        onChange={handleVolumeChange}
-      />
+      <VolumeInput volume={cell.volume} setVolume={setVolume} />
 
-      {/* Duty cycle */}
-      <input
-        type="text"
-        placeholder="⋅⋅"
-        className="w-4 focus:outline-0"
-        value={cell.dutyCycle}
-        onChange={handleDutyCycleChange}
-        onKeyDown={handleTabToNextCell}
+      <DutyCycleInput
+        dutyCycle={cell.dutyCycle}
+        setDutyCycle={setDutyCycle}
+        setNextCellAsActive={setNextCellAsActive}
       />
     </>
   );

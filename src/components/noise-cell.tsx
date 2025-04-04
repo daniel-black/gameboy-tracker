@@ -1,10 +1,14 @@
 import { useNoiseCell } from "@/hooks/use-noise-cell";
 import { activeCellAtom } from "@/store";
 import { useSetAtom } from "jotai";
+import { VolumeInput } from "./volume-input";
 
 export function NoiseCell(props: { row: number }) {
   const [cell, setCell] = useNoiseCell(props.row);
   const setActiveCell = useSetAtom(activeCellAtom);
+
+  const setVolume = (newVolume: string) =>
+    setCell({ ...cell, volume: newVolume });
 
   function handleRateChange(e: React.ChangeEvent<HTMLInputElement>) {
     if (e.target.value.length > 3) return;
@@ -13,20 +17,10 @@ export function NoiseCell(props: { row: number }) {
     setCell(newCell);
   }
 
-  function handleVolumeChange(e: React.ChangeEvent<HTMLInputElement>) {
-    if (e.target.value.length > 2) return;
-
-    const newCell = { ...cell, volume: e.target.value };
-    setCell(newCell);
-  }
-
-  function handleTabToNextCell(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Tab" && !e.shiftKey) {
-      // Let the default tab behavior work, but update the active cell
-      setTimeout(() => {
-        setActiveCell({ row: props.row < 63 ? props.row + 1 : 0, col: 0 });
-      }, 0);
-    }
+  function setNextCellAsActive() {
+    setTimeout(() => {
+      setActiveCell({ row: props.row, col: 1 });
+    }, 0);
   }
 
   function handleShiftTabToPrevCell(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -51,13 +45,10 @@ export function NoiseCell(props: { row: number }) {
       />
 
       {/* Volume */}
-      <input
-        type="text"
-        placeholder="⋅⋅"
-        className="w-4 focus:outline-0"
-        value={cell.volume}
-        onChange={handleVolumeChange}
-        onKeyDown={handleTabToNextCell}
+      <VolumeInput
+        volume={cell.volume}
+        setVolume={setVolume}
+        setNextCellAsActive={setNextCellAsActive}
       />
     </>
   );
