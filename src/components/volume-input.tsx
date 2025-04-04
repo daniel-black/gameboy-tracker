@@ -18,6 +18,8 @@ const validVolumeValues = [
   "15",
 ];
 
+const numberStrings = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
+
 type VolumeInputProps = {
   volume: string;
   setVolume: (newVolume: string) => void;
@@ -69,6 +71,12 @@ export function VolumeInput({
 
     if (e.key === "-" && volume.length === 2) {
       setVolume("--");
+      return;
+    }
+
+    if (volume.length === 2 && numberStrings.includes(e.key)) {
+      e.preventDefault();
+      setVolume(e.key);
       return;
     }
 

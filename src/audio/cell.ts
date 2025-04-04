@@ -48,7 +48,7 @@ export function createDefaultWaveCell(): WaveCell {
   return {
     note: "---",
     waveForm: "---",
-    volume: "---",
+    volume: "--",
   };
 }
 

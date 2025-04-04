@@ -80,31 +80,44 @@ export function NoteInput({
   }
 
   function handleNoteKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    // Backspace on a special note should fully clear the input
     if (e.key === "Backspace") {
       if (note === "---" || note === "OFF") {
         e.preventDefault();
-
         setNote("");
         return;
       }
     }
 
+    // Start of a valid note should clear out special notes
+    if (validNoteChars.includes(e.key.toUpperCase())) {
+      if (note === "---" || note === "OFF") {
+        e.preventDefault();
+        setNote(e.key.toUpperCase());
+        return;
+      }
+    }
+
+    // Entering "-" when a valid note is entered should set it to "---"
     if (e.key === "-" && note.length === 3) {
       setNote("---");
       return;
     }
 
+    // Entering "O" when a valid note is entered should set it to "OFF"
     if (e.key === "o" && note.length === 3) {
       setNote("OFF");
       return;
     }
 
+    // Shift + Tab should set the previous cell as active
     if (e.key === "Tab" && e.shiftKey) {
       setPreviousCellAsActive();
       return;
     }
   }
 
+  // The input field should not be left invalid
   function handleNoteBlur() {
     if (note.length !== 3) {
       setNote("---");
