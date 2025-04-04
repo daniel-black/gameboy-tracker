@@ -1,18 +1,11 @@
 import { useWaveCell } from "@/hooks/use-wave-cell";
 import { activeCellAtom } from "@/store";
 import { useSetAtom } from "jotai";
+import { NoteInput } from "./note-input";
 
 export function WaveCell2(props: { row: number }) {
   const [cell, setCell] = useWaveCell(props.row);
   const setActiveCell = useSetAtom(activeCellAtom);
-
-  function handleNoteChange(e: React.ChangeEvent<HTMLInputElement>) {
-    if (e.target.value.length > 3) return;
-
-    const newNote = e.target.value.toUpperCase();
-    const newCell = { ...cell, note: newNote };
-    setCell(newCell);
-  }
 
   function handleVolumeChange(e: React.ChangeEvent<HTMLInputElement>) {
     if (e.target.value.length > 3) return;
@@ -37,25 +30,19 @@ export function WaveCell2(props: { row: number }) {
     }
   }
 
-  function handleShiftTabToPrevCell(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Tab" && e.shiftKey) {
-      // Let the default shift+tab behavior work, but update the active cell
-      setTimeout(() => {
-        setActiveCell({ row: props.row, col: 1 });
-      }, 0);
-    }
+  function setPreviousCellAsActive() {
+    setTimeout(() => {
+      setActiveCell({ row: props.row, col: 1 });
+    }, 0);
   }
 
   return (
     <>
       {/* Note */}
-      <input
-        type="text"
-        placeholder="⋅⋅⋅"
-        className="w-6 focus:outline-0"
+      <NoteInput
         value={cell.note}
-        onChange={handleNoteChange}
-        onKeyDown={handleShiftTabToPrevCell}
+        onChange={(newNote: string) => setCell({ ...cell, note: newNote })}
+        setPreviousCellAsActive={setPreviousCellAsActive}
       />
 
       {/* Volume */}
