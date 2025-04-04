@@ -1,10 +1,10 @@
 import { activeCellAtom } from "@/store";
 import { useAtom } from "jotai";
 import { useEffect } from "react";
-import { Pulse1Cell2 } from "./pulse1-cell-2";
-import { Pulse2Cell2 } from "./pulse2-cell-2";
-import { WaveCell2 } from "./wave-cell-2";
-import { NoiseCell2 } from "./noise-cell-2";
+import { Pulse1Cell } from "./pulse1-cell";
+import { Pulse2Cell } from "./pulse2-cell";
+import { WaveCell } from "./wave-cell";
+import { NoiseCell } from "./noise-cell";
 
 type CellProps = {
   row: number;
@@ -39,10 +39,10 @@ export function Cell({ row, col }: CellProps) {
       }`}
     >
       <div className="flex justify-around items-center gap-1">
-        {col === 0 && <Pulse1Cell2 row={row} />}
-        {col === 1 && <Pulse2Cell2 row={row} />}
-        {col === 2 && <WaveCell2 row={row} />}
-        {col === 3 && <NoiseCell2 row={row} />}
+        {col === 0 && <Pulse1Cell row={row} />}
+        {col === 1 && <Pulse2Cell row={row} />}
+        {col === 2 && <WaveCell row={row} />}
+        {col === 3 && <NoiseCell row={row} />}
       </div>
     </td>
   );

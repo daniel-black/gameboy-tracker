@@ -2,7 +2,7 @@ import { useNoiseCell } from "@/hooks/use-noise-cell";
 import { activeCellAtom } from "@/store";
 import { useSetAtom } from "jotai";
 
-export function NoiseCell2(props: { row: number }) {
+export function NoiseCell(props: { row: number }) {
   const [cell, setCell] = useNoiseCell(props.row);
   const setActiveCell = useSetAtom(activeCellAtom);
 

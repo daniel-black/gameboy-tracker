@@ -3,7 +3,7 @@ import { activeCellAtom } from "@/store";
 import { useSetAtom } from "jotai";
 import { NoteInput } from "./note-input";
 
-export function WaveCell2(props: { row: number }) {
+export function WaveCell(props: { row: number }) {
   const [cell, setCell] = useWaveCell(props.row);
   const setActiveCell = useSetAtom(activeCellAtom);
 

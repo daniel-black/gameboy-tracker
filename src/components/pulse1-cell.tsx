@@ -25,7 +25,7 @@ const validVolumeValues = [
 
 const validDutyCycleValues = ["--", "12", "25", "50", "75"];
 
-export function Pulse1Cell2(props: { row: number }) {
+export function Pulse1Cell(props: { row: number }) {
   const [cell, setCell] = usePulse1Cell(props.row);
   const setActiveCell = useSetAtom(activeCellAtom);
 

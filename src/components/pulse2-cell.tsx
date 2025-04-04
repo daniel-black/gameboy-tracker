@@ -3,7 +3,7 @@ import { activeCellAtom } from "@/store";
 import { useSetAtom } from "jotai";
 import { NoteInput } from "./note-input";
 
-export function Pulse2Cell2(props: { row: number }) {
+export function Pulse2Cell(props: { row: number }) {
   const [cell, setCell] = usePulse2Cell(props.row);
   const setActiveCell = useSetAtom(activeCellAtom);
 
