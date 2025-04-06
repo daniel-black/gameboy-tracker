@@ -80,7 +80,7 @@ export function VolumeInput({
       return;
     }
 
-    if (setNextCellAsActive && e.key === "Tab" && e.shiftKey) {
+    if (setNextCellAsActive && e.key === "Tab" && !e.shiftKey) {
       setNextCellAsActive();
       return;
     }

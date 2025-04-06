@@ -117,15 +117,20 @@ export const NOTE_FREQUENCY = {
   "B-7": 3951.07,
 } as const;
 
-export type MusicalNote = keyof typeof NOTE_FREQUENCY;
+const noteFrequencyMap = new Map<string, number>(
+  Object.entries(NOTE_FREQUENCY)
+);
 
-export type SpecialNote =
-  | "---" // do nothing new, continue previous note
-  | "OFF"; // turn off note (really means frequency = 0)
+export function getFrequency(noteString: string): number {
+  if (noteString === "OFF") {
+    return 0;
+  }
 
-export type Note = MusicalNote | SpecialNote;
+  const note = noteFrequencyMap.get(noteString);
+  if (note !== undefined) {
+    return note;
+  }
 
-export function getFrequency(note: Note): number {
-  if (note === "OFF" || note === "---") return 0;
-  return NOTE_FREQUENCY[note] || 0;
+  console.warn("Invalid note string:", noteString);
+  return 0;
 }

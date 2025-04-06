@@ -30,7 +30,6 @@ export function WaveVolumeInput({ volume, setVolume }: WaveVolumeInputProps) {
   }
 
   function handleVolumeKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    console.log("onKeyDown");
     if (e.key === "Backspace" && volume.length === 2) {
       e.preventDefault();
       setVolume("");

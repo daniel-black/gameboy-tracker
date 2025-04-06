@@ -1,55 +1,52 @@
-import { useNoiseCell } from "@/hooks/use-noise-cell";
 import { activeCellAtom } from "@/store";
-import { useSetAtom } from "jotai";
+import { useAtom } from "jotai";
 import { VolumeInput } from "./volume-input";
+import { NoiseRateInput } from "./noise-rate-input";
+import { useCell } from "@/hooks/use-cell";
 
 export function NoiseCell(props: { row: number }) {
-  const [cell, setCell] = useNoiseCell(props.row);
-  const setActiveCell = useSetAtom(activeCellAtom);
+  const [cell, setCell] = useCell({ channel: "noise", row: props.row });
+  const [activeCell, setActiveCell] = useAtom(activeCellAtom);
+
+  const isActive =
+    activeCell && activeCell.row === props.row && activeCell.col === 3;
 
   const setVolume = (newVolume: string) =>
     setCell({ ...cell, volume: newVolume });
-
-  function handleRateChange(e: React.ChangeEvent<HTMLInputElement>) {
-    if (e.target.value.length > 3) return;
-
-    const newCell = { ...cell, rate: e.target.value };
-    setCell(newCell);
-  }
+  const setRate = (newRate: string) => setCell({ ...cell, rate: newRate });
 
   function setNextCellAsActive() {
     setTimeout(() => {
-      setActiveCell({ row: props.row, col: 1 });
+      setActiveCell({ row: props.row < 63 ? props.row + 1 : 0, col: 0 });
     }, 0);
   }
 
-  function handleShiftTabToPrevCell(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Tab" && e.shiftKey) {
-      // Let the default shift+tab behavior work, but update the active cell
-      setTimeout(() => {
-        setActiveCell({ row: props.row, col: 2 });
-      }, 0);
-    }
+  function setPreviousCellAsActive() {
+    setTimeout(() => {
+      setActiveCell({ row: props.row, col: 2 });
+    }, 0);
   }
 
   return (
-    <>
-      {/* Note */}
-      <input
-        type="text"
-        placeholder="⋅⋅⋅"
-        className="w-6 focus:outline-0"
-        value={cell.rate}
-        onChange={handleRateChange}
-        onKeyDown={handleShiftTabToPrevCell}
-      />
+    <td
+      onClick={() => setActiveCell({ row: props.row, col: 3 })}
+      className={`border border-gray-300 py-0.5 px-1 ${
+        isActive ? "bg-gray-100" : ""
+      }`}
+    >
+      <div className="flex justify-around items-center gap-1">
+        <NoiseRateInput
+          rate={cell.rate}
+          setRate={setRate}
+          setPreviousCellAsActive={setPreviousCellAsActive}
+        />
 
-      {/* Volume */}
-      <VolumeInput
-        volume={cell.volume}
-        setVolume={setVolume}
-        setNextCellAsActive={setNextCellAsActive}
-      />
-    </>
+        <VolumeInput
+          volume={cell.volume}
+          setVolume={setVolume}
+          setNextCellAsActive={setNextCellAsActive}
+        />
+      </div>
+    </td>
   );
 }

@@ -15,13 +15,17 @@ import {
   Pulse1Cell,
   Pulse2Cell,
   WaveCell,
+  Cell,
 } from "./cell";
 import { TypedEventEmitter } from "./typed-event-emmiter";
-import { DutyCycle, getWaveShaperCurve } from "./wave-shaper";
+import { getWaveShaperCurve } from "./wave-shaper";
 import { TrackerEventMap } from "./events";
 import { ChannelType, Channels, Pattern, PatternMetadata } from "./types";
-import { getFrequency, Note } from "./notes";
-import { getVolume, VolumeLevel } from "./volume";
+import { getFrequency } from "./notes";
+import { getVolume, getWaveVolume } from "./volume";
+import { getRate } from "./rate";
+import { getDutyCycle } from "./duty-cycle";
+import { getWaveForm } from "./wave-form";
 
 /**
  * A tracker for a music sequencer that keeps track of the tempo and timing of the music.
@@ -289,40 +293,17 @@ export class Tracker {
     return this.currentPatternId;
   }
 
-  public getPulse1Cell(row: number) {
-    return this.getCurrentPattern().cells.pulse1[row];
+  public getCell<T extends ChannelType>(channel: T, row: number) {
+    return this.getCurrentPattern().cells[channel][row] as Cell[T];
   }
 
-  public setPulse1Cell(row: number, newCell: Pulse1Cell) {
-    this.getCurrentPattern().cells.pulse1[row] = newCell;
-    this.emitter.emit("changedPulse1Cell", { row });
-  }
-
-  public getPulse2Cell(row: number) {
-    return this.getCurrentPattern().cells.pulse2[row];
-  }
-
-  public setPulse2Cell(row: number, newCell: Pulse2Cell) {
-    this.getCurrentPattern().cells.pulse2[row] = newCell;
-    this.emitter.emit("changedPulse2Cell", { row });
-  }
-
-  public setWaveCell(row: number, newCell: WaveCell) {
-    this.getCurrentPattern().cells.wave[row] = newCell;
-    this.emitter.emit("changedWaveCell", { row });
-  }
-
-  public getWaveCell(row: number): WaveCell {
-    return this.getCurrentPattern().cells.wave[row];
-  }
-
-  public getNoiseCell(row: number): NoiseCell {
-    return this.getCurrentPattern().cells.noise[row];
-  }
-
-  public setNoiseCell(row: number, newCell: NoiseCell) {
-    this.getCurrentPattern().cells.noise[row] = newCell;
-    this.emitter.emit("changedNoiseCell", { row });
+  public setCell<T extends ChannelType>(
+    channel: T,
+    row: number,
+    newCell: Cell[T]
+  ) {
+    this.getCurrentPattern().cells[channel][row] = newCell;
+    this.emitter.emit("changedCell", { channel, row });
   }
 
   public async play(
@@ -459,30 +440,20 @@ export class Tracker {
     }
 
     if (cell.note !== "---") {
-      const frequency = getFrequency(cell.note as Note); // needs work
+      const frequency = getFrequency(cell.note);
       if (frequency > 0) {
         // Set frequency at the scheduled time
         this.channels.pulse1.source.frequency.setValueAtTime(frequency, time);
 
         // Set volume
         this.channels.pulse1.gainNode.gain.setValueAtTime(
-          getVolume(parseInt(cell.volume) as VolumeLevel),
+          getVolume(cell.volume),
           time
         );
 
-        // needs work
-        let dutyCycle = 0.125;
-        if (cell.dutyCycle === "25") {
-          dutyCycle = 0.25;
-        } else if (cell.dutyCycle === "50") {
-          dutyCycle = 0.5;
-        } else if (cell.dutyCycle === "75") {
-          dutyCycle = 0.75;
-        }
-
         // Set duty cycle
         this.channels.pulse1.waveShaper.curve = getWaveShaperCurve(
-          dutyCycle as DutyCycle
+          getDutyCycle(cell.dutyCycle)
         );
       } else if (cell.note === "OFF") {
         // Turn off the note by setting volume to 0
@@ -498,29 +469,19 @@ export class Tracker {
     }
 
     if (cell.note !== "---") {
-      const frequency = getFrequency(cell.note as Note); // needs work
+      const frequency = getFrequency(cell.note);
       if (frequency > 0) {
         // Set frequency at the scheduled time
         this.channels.pulse2.source.frequency.setValueAtTime(frequency, time);
 
         // Set volume
         this.channels.pulse2.gainNode.gain.setValueAtTime(
-          getVolume(parseInt(cell.volume) as VolumeLevel),
+          getVolume(cell.volume),
           time
         );
 
-        // needs work
-        let dutyCycle = 0.125;
-        if (cell.dutyCycle === "25") {
-          dutyCycle = 0.25;
-        } else if (cell.dutyCycle === "50") {
-          dutyCycle = 0.5;
-        } else if (cell.dutyCycle === "75") {
-          dutyCycle = 0.75;
-        }
-
         this.channels.pulse2.waveShaper.curve = getWaveShaperCurve(
-          dutyCycle as DutyCycle
+          getDutyCycle(cell.dutyCycle)
         );
       } else if (cell.note === "OFF") {
         // Turn off the note by setting volume to 0
@@ -536,20 +497,12 @@ export class Tracker {
     }
 
     if (cell.note !== "---") {
-      const frequency = getFrequency(cell.note as Note); // needs work
+      const frequency = getFrequency(cell.note);
       if (frequency > 0) {
         // Set wave form
         if (cell.waveForm !== "---") {
-          if (cell.waveForm === "SIN") {
-            this.channels.wave.source.type = "sine";
-          } else if (cell.waveForm === "SAW") {
-            this.channels.wave.source.type = "sawtooth";
-          } else if (cell.waveForm === "TRI") {
-            this.channels.wave.source.type = "triangle";
-          } else if (cell.waveForm === "SQR") {
-            this.channels.wave.source.type = "square";
-          }
-          // this.channels.wave.source.type = cell.waveForm;
+          const waveForm = getWaveForm(cell.waveForm);
+          this.channels.wave.source.type = waveForm;
         }
 
         // Set frequency at the scheduled time
@@ -557,7 +510,7 @@ export class Tracker {
 
         // Set volume
         this.channels.wave.gainNode.gain.setValueAtTime(
-          parseFloat(cell.volume),
+          getWaveVolume(cell.volume),
           time
         );
       } else if (cell.note === "OFF") {
@@ -573,13 +526,15 @@ export class Tracker {
       return;
     }
 
-    if (parseFloat(cell.rate) > 0) {
-      this.channels.noise.source.playbackRate.setValueAtTime(
-        parseFloat(cell.rate),
-        time
-      );
+    if (cell.rate == "--") {
+      return;
+    }
+
+    const parsedRate = getRate(cell.rate);
+    if (parsedRate > 0) {
+      this.channels.noise.source.playbackRate.setValueAtTime(parsedRate, time);
       this.channels.noise.gainNode.gain.setValueAtTime(
-        getVolume(parseInt(cell.volume) as VolumeLevel),
+        getVolume(cell.volume),
         time
       );
     } else {

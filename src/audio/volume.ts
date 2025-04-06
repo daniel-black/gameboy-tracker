@@ -17,11 +17,31 @@ type ToNumber<S extends string> = S extends `${infer N extends number}`
   : never;
 export type VolumeLevel = ToNumber<Indices<typeof VOLUME>>;
 
-export function getVolume(volumeLevel: VolumeLevel) {
-  return VOLUME[volumeLevel] || 0;
+export function getVolume(volumeString: string) {
+  const parsedVolume = parseInt(volumeString, 10);
+  if (isNaN(parsedVolume)) {
+    console.warn("Invalid volume string:", volumeString);
+    return 0;
+  }
+  if (parsedVolume < 0 || parsedVolume > 15) {
+    console.warn("Volume out of range:", parsedVolume);
+    return 0;
+  }
+  return VOLUME[parsedVolume] || 0;
 }
 
 export type WaveVolumeLevel = 0 | 0.25 | 0.5 | 1;
+
+const waveVolumeMap = new Map<string, number>([
+  ["OF", 0],
+  ["LO", 0.25],
+  ["MD", 0.5],
+  ["HI", 1],
+]);
+
+export function getWaveVolume(volumeString: string) {
+  return waveVolumeMap.get(volumeString) ?? 0;
+}
 
 /**
  * Checks if a value is a valid VolumeLevel (0-15)

@@ -1,13 +1,81 @@
-// Valid first characters (note names and special characters)
-const validFirstChars = ["C", "D", "E", "F", "G", "A", "B", "O", "-"];
+const NOTES = {
+  SPECIAL: {
+    OFF: "OFF",
+    CONTINUE: "---",
+  },
+  VALID_NOTE_CHARS: new Set(["C", "D", "E", "F", "G", "A", "B"]),
+  VALID_FIRST_CHARS: new Set(["C", "D", "E", "F", "G", "A", "B", "O", "-"]),
+  VALID_SECOND_CHARS: new Set(["-", "#", "b"]),
+  VALID_THIRD_CHARS: new Set(["2", "3", "4", "5", "6", "7", "F"]),
+  VALID_SHARP_NOTES: new Set(["C", "D", "F", "G", "A"]), // Notes that can have '#'
+  VALID_FLAT_NOTES: new Set(["D", "E", "G", "A", "B"]), // Notes that can have 'b'
+} as const;
 
-const validNoteChars = ["C", "D", "E", "F", "G", "A", "B"];
+function isValidNoteInput(input: string): boolean {
+  if (
+    input.length === 0 ||
+    input === NOTES.SPECIAL.CONTINUE ||
+    input === NOTES.SPECIAL.OFF
+  ) {
+    return true;
+  }
 
-// Valid second characters ("F" might be one too but)
-const validSecondChars = ["-", "#"];
+  if (input.length === 1) {
+    return NOTES.VALID_FIRST_CHARS.has(input);
+  }
 
-// Valid third characters (octave numbers)
-const validThirdChars = ["2", "3", "4", "5", "6", "7", "F"];
+  if (input.length === 2) {
+    if (input === "OF") {
+      return true;
+    }
+
+    // Make sure sharps go with the right notes
+    if (input[1] === "#") {
+      return NOTES.VALID_SHARP_NOTES.has(input[0]);
+    }
+
+    // Make sure flats go with the right notes
+    if (input[1] === "b") {
+      return NOTES.VALID_FLAT_NOTES.has(input[0]);
+    }
+
+    return (
+      NOTES.VALID_NOTE_CHARS.has(input[0]) &&
+      NOTES.VALID_SECOND_CHARS.has(input[1])
+    );
+  }
+
+  if (input.length === 3) {
+    if (input === NOTES.SPECIAL.CONTINUE || input === NOTES.SPECIAL.OFF) {
+      return true;
+    }
+
+    // Sharps
+    if (input[1] === "#") {
+      return (
+        NOTES.VALID_SHARP_NOTES.has(input[0]) &&
+        NOTES.VALID_THIRD_CHARS.has(input[2])
+      );
+    }
+
+    // Flats
+    if (input[1] === "b") {
+      return (
+        NOTES.VALID_FLAT_NOTES.has(input[0]) &&
+        NOTES.VALID_THIRD_CHARS.has(input[2])
+      );
+    }
+
+    // Natural notes
+    return (
+      NOTES.VALID_NOTE_CHARS.has(input[0]) &&
+      input[1] === "-" &&
+      NOTES.VALID_THIRD_CHARS.has(input[2])
+    );
+  }
+
+  return false;
+}
 
 type NoteInputProps = {
   note: string;
@@ -21,68 +89,23 @@ export function NoteInput({
   setPreviousCellAsActive,
 }: NoteInputProps) {
   function handleNoteChange(e: React.ChangeEvent<HTMLInputElement>) {
-    // Prevent more than 3 characters
-    if (e.target.value.length > 3) return;
+    const input = e.target.value.replace(/[^b]/g, (c) => c.toUpperCase());
 
-    // Always work with uppercase
-    const input = e.target.value.toUpperCase();
-
-    // Shortcut for "---" from empty
-    if (note === "" && input === "-") {
-      setNote("---");
-      return;
-    }
-
-    // Shortcut for "OFF" from empty
-    if (note === "" && input === "O") {
-      setNote("OFF");
-      return;
-    }
-
-    let isValid = true;
-
-    if (input.length === 1) {
-      // First character must be a valid note or special character
-      isValid = validFirstChars.includes(input);
-    } else if (input.length === 2) {
-      const firstChar = input[0];
-      const secondChar = input[1];
-
-      // Special case for OFF
-      if (input === "OF") {
-        isValid = true;
-      } else if (validNoteChars.includes(firstChar)) {
-        isValid = validSecondChars.includes(secondChar);
+    if (isValidNoteInput(input)) {
+      if (input === "O") {
+        setNote(NOTES.SPECIAL.OFF);
+      } else if (input === "-") {
+        setNote(NOTES.SPECIAL.CONTINUE);
       } else {
-        isValid = false;
+        setNote(input);
       }
-    } else if (input.length === 3) {
-      const firstChar = input[0];
-      const secondChar = input[1];
-      const thirdChar = input[2];
-
-      // Special cases
-      if (input === "OFF" || input === "---") {
-        isValid = true;
-      } else if (
-        validNoteChars.includes(firstChar) &&
-        validSecondChars.includes(secondChar)
-      ) {
-        isValid = validThirdChars.includes(thirdChar);
-      } else {
-        isValid = false;
-      }
-    }
-
-    if (isValid) {
-      setNote(input);
     }
   }
 
   function handleNoteKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     // Backspace on a special note should fully clear the input
     if (e.key === "Backspace") {
-      if (note === "---" || note === "OFF") {
+      if (note === NOTES.SPECIAL.CONTINUE || note === NOTES.SPECIAL.OFF) {
         e.preventDefault();
         setNote("");
         return;
@@ -90,8 +113,8 @@ export function NoteInput({
     }
 
     // Start of a valid note should clear out special notes
-    if (validNoteChars.includes(e.key.toUpperCase())) {
-      if (note === "---" || note === "OFF") {
+    if (NOTES.VALID_NOTE_CHARS.has(e.key.toUpperCase())) {
+      if (note === NOTES.SPECIAL.CONTINUE || note === NOTES.SPECIAL.OFF) {
         e.preventDefault();
         setNote(e.key.toUpperCase());
         return;
@@ -100,13 +123,13 @@ export function NoteInput({
 
     // Entering "-" when a valid note is entered should set it to "---"
     if (e.key === "-" && note.length === 3) {
-      setNote("---");
+      setNote(NOTES.SPECIAL.CONTINUE);
       return;
     }
 
     // Entering "O" when a valid note is entered should set it to "OFF"
     if (e.key === "o" && note.length === 3) {
-      setNote("OFF");
+      setNote(NOTES.SPECIAL.OFF);
       return;
     }
 
@@ -120,7 +143,7 @@ export function NoteInput({
   // The input field should not be left invalid
   function handleNoteBlur() {
     if (note.length !== 3) {
-      setNote("---");
+      setNote(NOTES.SPECIAL.CONTINUE);
     }
   }
 

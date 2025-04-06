@@ -9,10 +9,7 @@ export interface TrackerEventMap {
   toggledChannel: { channel: ChannelType; enabled: boolean };
 
   // Editor events
-  changedPulse1Cell: { row: number };
-  changedPulse2Cell: { row: number };
-  changedWaveCell: { row: number };
-  changedNoiseCell: { row: number };
+  changedCell: { channel: ChannelType; row: number };
 
   // Playback events
   startedPlayback: { row: number; patternId: string };

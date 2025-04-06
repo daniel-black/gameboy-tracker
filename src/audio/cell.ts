@@ -1,7 +1,11 @@
 import { WAVE_FORMS } from "./constants";
-import { Note } from "./notes";
-import { VolumeLevel, WaveVolumeLevel } from "./volume";
-import { DutyCycle } from "./wave-shaper";
+
+export type Cell = {
+  pulse1: Pulse1Cell;
+  pulse2: Pulse2Cell;
+  wave: WaveCell;
+  noise: NoiseCell;
+};
 
 export interface Pulse1Cell {
   note: string;
@@ -54,7 +58,7 @@ export function createDefaultWaveCell(): WaveCell {
 
 export function createDefaultNoiseCell(): NoiseCell {
   return {
-    rate: "---", // off
+    rate: "--", // continue
     volume: "--",
   };
 }

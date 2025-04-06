@@ -1,13 +1,16 @@
-import { usePulse2Cell } from "@/hooks/use-pulse2-cell";
 import { activeCellAtom } from "@/store";
-import { useSetAtom } from "jotai";
+import { useAtom } from "jotai";
 import { NoteInput } from "./note-input";
 import { VolumeInput } from "./volume-input";
 import { DutyCycleInput } from "./duty-cycle-input";
+import { useCell } from "@/hooks/use-cell";
 
 export function Pulse2Cell(props: { row: number }) {
-  const [cell, setCell] = usePulse2Cell(props.row);
-  const setActiveCell = useSetAtom(activeCellAtom);
+  const [cell, setCell] = useCell({ channel: "pulse2", row: props.row });
+  const [activeCell, setActiveCell] = useAtom(activeCellAtom);
+
+  const isActive =
+    activeCell && activeCell.row === props.row && activeCell.col === 1;
 
   const setNote = (newNote: string) => setCell({ ...cell, note: newNote });
   const setVolume = (newVolume: string) =>
@@ -28,20 +31,27 @@ export function Pulse2Cell(props: { row: number }) {
   }
 
   return (
-    <>
-      <NoteInput
-        note={cell.note}
-        setNote={setNote}
-        setPreviousCellAsActive={setPreviousCellAsActive}
-      />
+    <td
+      onClick={() => setActiveCell({ row: props.row, col: 1 })}
+      className={`border border-gray-300 py-0.5 px-1 ${
+        isActive ? "bg-gray-100" : ""
+      }`}
+    >
+      <div className="flex justify-around items-center gap-1">
+        <NoteInput
+          note={cell.note}
+          setNote={setNote}
+          setPreviousCellAsActive={setPreviousCellAsActive}
+        />
 
-      <VolumeInput volume={cell.volume} setVolume={setVolume} />
+        <VolumeInput volume={cell.volume} setVolume={setVolume} />
 
-      <DutyCycleInput
-        dutyCycle={cell.dutyCycle}
-        setDutyCycle={setDutyCycle}
-        setNextCellAsActive={setNextCellAsActive}
-      />
-    </>
+        <DutyCycleInput
+          dutyCycle={cell.dutyCycle}
+          setDutyCycle={setDutyCycle}
+          setNextCellAsActive={setNextCellAsActive}
+        />
+      </div>
+    </td>
   );
 }

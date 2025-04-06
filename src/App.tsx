@@ -6,7 +6,7 @@ import { Playback } from "./components/playback";
 
 export function App() {
   return (
-    <div className="font-mono w-screen h-screen flex">
+    <div className="font-mono w-screen h-screen flex selection:bg-gray-300">
       {/* Left half of screen - grid */}
       <div>
         <Grid />
