@@ -429,7 +429,7 @@ export class Tracker {
     );
 
     // Emit an event so the UI can update
-    this.emitter.emit("playedRow", {
+    this.emitter.emit("changedPlaybackRow", {
       row: this.currentPlaybackRow,
       patternId: currentPlaybackPattern.id,
       time,

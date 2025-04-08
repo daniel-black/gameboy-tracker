@@ -6,6 +6,9 @@ type PlaybackState = "stopped" | "playing" | "paused";
 
 export function usePlayback() {
   const [playbackState, setPlaybackState] = useState<PlaybackState>("stopped");
+  const [currentPlaybackRow, setCurrentPlaybackRow] = useState<number | null>(
+    null
+  );
 
   useEffect(() => {
     const handleStartedPlaybackEvent = (
@@ -30,18 +33,27 @@ export function usePlayback() {
       _: TrackerEventMap["stoppedPlayback"]
     ) => {
       setPlaybackState("stopped");
+      setCurrentPlaybackRow(null);
+    };
+
+    const handleRowChangedEvent = (
+      event: TrackerEventMap["changedPlaybackRow"]
+    ) => {
+      setCurrentPlaybackRow(event.row);
     };
 
     tracker.emitter.on("startedPlayback", handleStartedPlaybackEvent);
     tracker.emitter.on("pausedPlayback", handlePausedPlaybackEvent);
     tracker.emitter.on("resumedPlayback", handleResumedPlaybackEvent);
     tracker.emitter.on("stoppedPlayback", handleStoppedPlaybackEvent);
+    tracker.emitter.on("changedPlaybackRow", handleRowChangedEvent);
 
     return () => {
       tracker.emitter.off("startedPlayback", handleStartedPlaybackEvent);
       tracker.emitter.off("pausedPlayback", handlePausedPlaybackEvent);
       tracker.emitter.off("resumedPlayback", handleResumedPlaybackEvent);
       tracker.emitter.off("stoppedPlayback", handleStoppedPlaybackEvent);
+      tracker.emitter.off("changedPlaybackRow", handleRowChangedEvent);
     };
   }, []);
 
@@ -66,6 +78,7 @@ export function usePlayback() {
   }, []);
 
   return {
+    currentPlaybackRow,
     playbackState,
     stopPlayback,
     pausePlayback,

@@ -4,9 +4,10 @@ import { Pulse1Cell } from "./pulse1-cell";
 import { Pulse2Cell } from "./pulse2-cell";
 import { WaveCell } from "./wave-cell";
 import { NoiseCell } from "./noise-cell";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useSetAtom } from "jotai";
 import { activeCellAtom } from "@/store";
+import { usePlayback } from "@/hooks/use-playback";
 
 // Generate row headers (00 through 64)
 const rowHeaders = Array.from({ length: ROWS_PER_PATTERN }, (_, i) =>
@@ -15,6 +16,8 @@ const rowHeaders = Array.from({ length: ROWS_PER_PATTERN }, (_, i) =>
 
 export function Grid() {
   const setActiveCell = useSetAtom(activeCellAtom);
+  const { currentPlaybackRow, playbackState } = usePlayback();
+  const currentPlaybackRowRef = useRef<HTMLTableRowElement | null>(null);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -30,6 +33,16 @@ export function Grid() {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [setActiveCell]);
+
+  // Auto-scroll to keep the current row visible
+  useEffect(() => {
+    if (currentPlaybackRow !== null && currentPlaybackRowRef.current) {
+      currentPlaybackRowRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+  }, [currentPlaybackRow]);
 
   return (
     <div className="flex flex-col max-w-full overflow-x-auto text-xs">
@@ -53,18 +66,32 @@ export function Grid() {
           </thead>
           <tbody>
             {/* Create 64 rows (plus the header row) */}
-            {rowHeaders.map((rowHeader, rowIndex) => (
-              <tr key={rowIndex}>
-                {/* Row header cell */}
-                <td className="border border-gray-300 py-0.5 px-1 text-muted-foreground bg-gray-50 text-center select-none">
-                  {rowHeader}
-                </td>
-                <Pulse1Cell row={rowIndex} />
-                <Pulse2Cell row={rowIndex} />
-                <WaveCell row={rowIndex} />
-                <NoiseCell row={rowIndex} />
-              </tr>
-            ))}
+            {rowHeaders.map((rowHeader, rowIndex) => {
+              const isCurrentPlaybackRow =
+                currentPlaybackRow === rowIndex && playbackState !== "stopped";
+              const rowRef = isCurrentPlaybackRow
+                ? currentPlaybackRowRef
+                : null;
+
+              return (
+                <tr
+                  key={rowIndex}
+                  ref={rowRef}
+                  className={`transition-colors duration-75 ${
+                    isCurrentPlaybackRow ? "bg-blue-100" : ""
+                  }`}
+                >
+                  {/* Row header cell */}
+                  <td className="border border-gray-300 py-0.5 px-1 text-muted-foreground bg-gray-50 text-center select-none">
+                    {rowHeader}
+                  </td>
+                  <Pulse1Cell row={rowIndex} />
+                  <Pulse2Cell row={rowIndex} />
+                  <WaveCell row={rowIndex} />
+                  <NoiseCell row={rowIndex} />
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
