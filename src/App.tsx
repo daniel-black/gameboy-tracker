@@ -1,4 +1,3 @@
-import "./app.css";
 import { BPM } from "./components/bpm";
 import { Grid } from "./components/grid";
 import { MasterVolume } from "./components/master-volume";
