@@ -43,9 +43,9 @@ export function PatternManager() {
     };
   }, []);
 
-  function addNewPattern() {
-    tracker.addPattern();
-  }
+  // function addNewPattern() {
+  //   tracker.addPattern();
+  // }
 
   function setCurrentPattern(patternId: string) {
     tracker.setCurrentPatternId(patternId);

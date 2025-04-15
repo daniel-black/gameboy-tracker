@@ -7,7 +7,7 @@ import { sectionRangeAtom } from "@/store";
 
 export function WaveFormRadioGroup() {
   const row = useAtomValue(sectionRangeAtom).start ?? 0;
-  const [cell, setCell] = useCell({ channel: "wave", row });
+  const [cell, _] = useCell({ channel: "wave", row });
 
   return (
     <RadioGroup value={cell.waveForm} className="flex gap-2">
