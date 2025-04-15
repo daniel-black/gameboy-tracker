@@ -11,7 +11,7 @@ export function MasterVolume() {
   }
 
   return (
-    <div className="space-y-2 max-w-28">
+    <div className="space-y-2 w-32">
       <div className="flex justify-between">
         <Label htmlFor="master-volume">Vol.</Label>
         <span className="text-sm">{Math.trunc(masterVolume * 100)}%</span>

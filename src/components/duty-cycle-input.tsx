@@ -39,6 +39,20 @@ export function DutyCycleInput({
       return;
     }
 
+    if (dutyCycle.length === 2) {
+      if (e.key === "-") {
+        setDutyCycle("--");
+      } else if (e.key === "1") {
+        setDutyCycle("12");
+      } else if (e.key === "2") {
+        setDutyCycle("25");
+      } else if (e.key === "5") {
+        setDutyCycle("50");
+      } else if (e.key === "7") {
+        setDutyCycle("75");
+      }
+    }
+
     if (setNextCellAsActive && e.key === "Tab" && !e.shiftKey) {
       setNextCellAsActive();
       return;

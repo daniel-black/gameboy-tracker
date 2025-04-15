@@ -80,14 +80,9 @@ function isValidNoteInput(input: string): boolean {
 type NoteInputProps = {
   note: string;
   setNote: (value: string) => void;
-  setPreviousCellAsActive: () => void;
 };
 
-export function NoteInput({
-  note,
-  setNote,
-  setPreviousCellAsActive,
-}: NoteInputProps) {
+export function NoteInput({ note, setNote }: NoteInputProps) {
   function handleNoteChange(e: React.ChangeEvent<HTMLInputElement>) {
     const input = e.target.value.replace(/[^b]/g, (c) => c.toUpperCase());
 
@@ -130,12 +125,6 @@ export function NoteInput({
     // Entering "O" when a valid note is entered should set it to "OFF"
     if (e.key === "o" && note.length === 3) {
       setNote(NOTES.SPECIAL.OFF);
-      return;
-    }
-
-    // Shift + Tab should set the previous cell as active
-    if (e.key === "Tab" && e.shiftKey) {
-      setPreviousCellAsActive();
       return;
     }
   }

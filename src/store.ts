@@ -1,5 +1,8 @@
 import { atom } from "jotai";
 
-type CellCoordinates = { row: number; col: number };
+type SectionRange = {
+  start: number | null;
+  end: number | null;
+};
 
-export const activeCellAtom = atom<CellCoordinates | null>(null);
+export const sectionRangeAtom = atom<SectionRange>({ start: null, end: null });

@@ -1,16 +1,11 @@
 type WaveFormInputProps = {
   waveForm: string;
   setWaveForm: (newWaveForm: string) => void;
-  setNextCellAsActive: () => void;
 };
 
 const validWaveForms = ["---", "SIN", "SQR", "SAW", "TRI"];
 
-export function WaveFormInput({
-  waveForm,
-  setWaveForm,
-  setNextCellAsActive,
-}: WaveFormInputProps) {
+export function WaveFormInput({ waveForm, setWaveForm }: WaveFormInputProps) {
   function handleWaveFormChange(e: React.ChangeEvent<HTMLInputElement>) {
     if (e.target.value.length > 3) return;
 
@@ -38,11 +33,6 @@ export function WaveFormInput({
   }
 
   function handleWaveFormKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Tab" && !e.shiftKey) {
-      setNextCellAsActive();
-      return;
-    }
-
     if (e.key === "Backspace") {
       setWaveForm("");
       return;

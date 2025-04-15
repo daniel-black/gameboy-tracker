@@ -1,7 +1,6 @@
 type NoiseRateInputProps = {
   rate: string;
   setRate: (newRate: string) => void;
-  setPreviousCellAsActive: () => void;
 };
 
 const numberStrings = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
@@ -9,11 +8,7 @@ const numberStrings = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
 // `rate` is a string. It can only be 2 characters long.
 // It can be "--" (continue) or a two digit number string from "00" to "99"
 
-export function NoiseRateInput({
-  rate,
-  setRate,
-  setPreviousCellAsActive,
-}: NoiseRateInputProps) {
+export function NoiseRateInput({ rate, setRate }: NoiseRateInputProps) {
   function handleRateChange(e: React.ChangeEvent<HTMLInputElement>) {
     if (e.target.value.length > 2) return;
 
@@ -49,11 +44,6 @@ export function NoiseRateInput({
     if (e.key === "Backspace" && rate === "--") {
       e.preventDefault();
       setRate("");
-      return;
-    }
-
-    if (e.key === "Tab" && e.shiftKey) {
-      setPreviousCellAsActive();
       return;
     }
 

@@ -1,4 +1,4 @@
-const waveFormMap = new Map<string, OscillatorType>([
+export const waveFormMap = new Map<string, OscillatorType>([
   ["TRI", "triangle"],
   ["SQR", "square"],
   ["SAW", "sawtooth"],

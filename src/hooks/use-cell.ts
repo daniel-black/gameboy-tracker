@@ -47,7 +47,7 @@ export function useCell<T extends ChannelType>({
       );
       tracker.emitter.off("changedCell", handleChangedCellEvent);
     };
-  }, []);
+  }, [channel, row]);
 
   const setCell = useCallback(
     (newCell: Cell[T]) => {

@@ -69,6 +69,13 @@ export function usePlayback() {
     await tracker.playCurrentPattern();
   }, []);
 
+  const playSection = useCallback(async (start: number, end: number) => {
+    await tracker.play({
+      startRow: start,
+      endRow: end,
+    });
+  }, []);
+
   const pausePlayback = useCallback(async () => {
     await tracker.pause();
   }, []);
@@ -83,6 +90,7 @@ export function usePlayback() {
     stopPlayback,
     pausePlayback,
     playSong,
+    playSection,
     playCurrentPattern,
     resumePlayback,
   } as const;
