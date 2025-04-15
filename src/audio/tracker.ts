@@ -2,7 +2,7 @@ import { nanoid } from "nanoid";
 import {
   CHANNELS,
   DEFAULT_BPM,
-  MAX_PATTERNS,
+  // MAX_PATTERNS,
   ROWS_PER_BEAT,
   ROWS_PER_PATTERN,
 } from "./constants";
@@ -230,19 +230,19 @@ export class Tracker {
     );
   }
 
-  public addPattern() {
-    if (this.patterns.size >= MAX_PATTERNS) {
-      return;
-    }
+  // public addPattern() {
+  //   if (this.patterns.size >= MAX_PATTERNS) {
+  //     return;
+  //   }
 
-    const newPattern = this.createNewPattern();
+  //   const newPattern = this.createNewPattern();
 
-    this.patterns.set(newPattern.id, newPattern);
-    this.patternOrder.push(newPattern.id);
-    this.currentPatternId = newPattern.id;
+  //   this.patterns.set(newPattern.id, newPattern);
+  //   this.patternOrder.push(newPattern.id);
+  //   this.currentPatternId = newPattern.id;
 
-    this.emitter.emit("changedCurrentPattern", { patternId: newPattern.id });
-  }
+  //   this.emitter.emit("changedCurrentPattern", { patternId: newPattern.id });
+  // }
 
   /**
    * Gets whether a channel is enabled or not
