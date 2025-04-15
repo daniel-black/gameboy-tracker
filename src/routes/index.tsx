@@ -1,4 +1,5 @@
-import { App } from "@/App";
+// import { App } from "@/App";
+import { Editor } from "@/components/editor";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({
@@ -6,5 +7,5 @@ export const Route = createFileRoute("/")({
 });
 
 function RouteComponent() {
-  return <App />; // This is the main app component
+  return <Editor />; // This is the main app component
 }
