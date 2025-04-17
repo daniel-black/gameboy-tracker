@@ -23,14 +23,9 @@ const numberStrings = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
 type VolumeInputProps = {
   volume: string;
   setVolume: (newVolume: string) => void;
-  setNextCellAsActive?: () => void;
 };
 
-export function VolumeInput({
-  volume,
-  setVolume,
-  setNextCellAsActive,
-}: VolumeInputProps) {
+export function VolumeInput({ volume, setVolume }: VolumeInputProps) {
   function handleVolumeChange(e: React.ChangeEvent<HTMLInputElement>) {
     // Prevent more than 2 characters
     if (e.target.value.length > 2) return;
@@ -60,13 +55,10 @@ export function VolumeInput({
   }
 
   function handleVolumeKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Backspace") {
-      if (volume === "--") {
-        e.preventDefault();
-
-        setVolume("");
-        return;
-      }
+    if (e.key === "Backspace" && volume === "--") {
+      e.preventDefault();
+      setVolume("");
+      return;
     }
 
     if (e.key === "-" && volume.length === 2) {
@@ -77,11 +69,6 @@ export function VolumeInput({
     if (volume.length === 2 && numberStrings.includes(e.key)) {
       e.preventDefault();
       setVolume(e.key);
-      return;
-    }
-
-    if (setNextCellAsActive && e.key === "Tab" && !e.shiftKey) {
-      setNextCellAsActive();
       return;
     }
   }

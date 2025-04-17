@@ -11,6 +11,7 @@ export interface Pulse1Cell {
   note: string;
   volume: string;
   dutyCycle: string;
+  envelope: string;
 }
 
 export interface Pulse2Cell {
@@ -25,11 +26,13 @@ export interface WaveCell {
   note: string;
   waveForm: string;
   volume: string;
+  envelope: string;
 }
 
 export interface NoiseCell {
   rate: string; // this should be something between like 0.1 and 10
   volume: string;
+  envelope: string;
 }
 
 export function createDefaultPulse1Cell(): Pulse1Cell {
@@ -37,6 +40,7 @@ export function createDefaultPulse1Cell(): Pulse1Cell {
     note: "---",
     volume: "--",
     dutyCycle: "--",
+    envelope: "--",
   };
 }
 
@@ -53,12 +57,14 @@ export function createDefaultWaveCell(): WaveCell {
     note: "---",
     waveForm: "---",
     volume: "--",
+    envelope: "--",
   };
 }
 
 export function createDefaultNoiseCell(): NoiseCell {
   return {
-    rate: "--", // continue
+    rate: "--",
     volume: "--",
+    envelope: "--",
   };
 }

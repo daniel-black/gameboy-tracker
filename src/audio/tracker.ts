@@ -22,7 +22,12 @@ import { getWaveShaperCurve } from "./wave-shaper";
 import { TrackerEventMap } from "./events";
 import { ChannelType, Channels, Pattern, PatternMetadata } from "./types";
 import { getFrequency } from "./notes";
-import { getVolume, getWaveVolume } from "./volume";
+import {
+  getVolume,
+  getWaveVolume,
+  WAVE_VOLUME_KEYS,
+  waveVolumeMap,
+} from "./volume";
 import { getRate } from "./rate";
 import { getDutyCycle } from "./duty-cycle";
 import { getWaveForm } from "./wave-form";
@@ -380,14 +385,14 @@ export class Tracker {
     }
   }
 
+  private calculateSecondsPerRow(): number {
+    return 60 / (this.bpm * ROWS_PER_BEAT);
+  }
+
   /**
    * Scheduler function that queues up notes to play
    */
   private scheduler() {
-    // Calculate seconds per row based on BPM
-    // BPM is in beats per minute, and we have ROWS_PER_BEAT rows per beat
-    const secondsPerRow = 60 / (this.bpm * ROWS_PER_BEAT);
-
     // Schedule notes until we're a bit ahead of current time
     while (this.nextNoteTime < this.ctx.currentTime + this.lookaheadTime) {
       // Schedule the current row
@@ -397,7 +402,7 @@ export class Tracker {
       this.advancePlayhead();
 
       // Calculate the time for the next row
-      this.nextNoteTime += secondsPerRow;
+      this.nextNoteTime += this.calculateSecondsPerRow();
     }
   }
 
@@ -436,6 +441,86 @@ export class Tracker {
     });
   }
 
+  private scheduleVolumeEnvelope(
+    gainNode: GainNode,
+    initialVolumeString: string,
+    envelopeString: string,
+    time: number,
+    isWaveChannel: boolean
+  ) {
+    if (isContinue(envelopeString)) {
+      return;
+    }
+
+    const directionChar = envelopeString[0];
+    const stepChar = envelopeString[1];
+
+    if (
+      !["0", "1"].includes(directionChar) ||
+      !["1", "2", "3", "4", "5", "6", "7"].includes(stepChar)
+    ) {
+      return;
+    }
+
+    const isIncreasing = directionChar === "1";
+    const stepSpeed = parseInt(stepChar, 10);
+    const rowDuration = this.calculateSecondsPerRow();
+    const numStepsInRow = Math.min(8 - stepSpeed, 7); // max 7 steps
+    const stepDuration = rowDuration / numStepsInRow;
+    let currentVolume = parseInt(initialVolumeString, 10);
+
+    // wave envelope still a little broken i think
+    if (isWaveChannel) {
+      let currentVolumeIndex = waveVolumeMap.get(initialVolumeString) || 0;
+
+      for (let i = 0; i < numStepsInRow; i++) {
+        const stepTime = time + (i + 1) * stepDuration;
+
+        // Calculate next volume level based on direction
+        if (isIncreasing) {
+          currentVolumeIndex = Math.min(3, currentVolumeIndex + 1);
+        } else {
+          currentVolumeIndex = Math.max(0, currentVolumeIndex - 1);
+        }
+
+        // Get the wave volume string for this index
+        const volumeString = WAVE_VOLUME_KEYS[currentVolumeIndex];
+        const volumeValue = getWaveVolume(volumeString);
+        console.log(`volume: ${volumeValue} at ${stepTime}`);
+
+        // Apply the volume change
+        gainNode.gain.setValueAtTime(volumeValue, stepTime);
+
+        // Stop if we've reached the volume limit
+        if (currentVolumeIndex === 0 || currentVolumeIndex === 3) {
+          break;
+        }
+      }
+
+      return;
+    }
+
+    for (let i = 0; i < numStepsInRow; i++) {
+      const stepTime = time + (i + 1) * stepDuration;
+
+      // Calculate next volume level based on direction
+      if (isIncreasing) {
+        currentVolume = Math.min(15, currentVolume + 1);
+      } else {
+        currentVolume = Math.max(0, currentVolume - 1);
+      }
+
+      // Apply the volume change
+      const volumeValue = getVolume(currentVolume.toString());
+      gainNode.gain.setValueAtTime(volumeValue, stepTime);
+
+      // Stop if we've reached the volume limit
+      if (currentVolume === 0 || currentVolume === 15) {
+        break;
+      }
+    }
+  }
+
   private schedulePulse1Channel(time: number, cell: Pulse1Cell) {
     // skip scheduling if the channel is disabled
     if (!this.getIsChannelEnabled("pulse1")) {
@@ -450,10 +535,22 @@ export class Tracker {
     }
 
     if (!isContinue(cell.volume)) {
+      // cancel any previous envelope automation
+      this.channels.pulse1.gainNode.gain.cancelScheduledValues(time);
       this.channels.pulse1.gainNode.gain.setValueAtTime(
         getVolume(cell.volume),
         time
       );
+
+      if (!isContinue(cell.envelope)) {
+        this.scheduleVolumeEnvelope(
+          this.channels.pulse1.gainNode,
+          cell.volume,
+          cell.envelope,
+          time,
+          false
+        );
+      }
     }
 
     if (!isContinue(cell.dutyCycle)) {
@@ -504,10 +601,21 @@ export class Tracker {
     }
 
     if (!isContinue(cell.volume)) {
+      this.channels.wave.gainNode.gain.cancelScheduledValues(time);
       this.channels.wave.gainNode.gain.setValueAtTime(
         getWaveVolume(cell.volume),
         time
       );
+
+      if (!isContinue(cell.envelope)) {
+        this.scheduleVolumeEnvelope(
+          this.channels.wave.gainNode,
+          cell.volume,
+          cell.envelope,
+          time,
+          true
+        );
+      }
     }
 
     if (!isContinue(cell.waveForm)) {
@@ -516,7 +624,6 @@ export class Tracker {
   }
 
   private scheduleNoiseChannel(time: number, cell: NoiseCell) {
-    // skip scheduling if the channel is disabled
     if (!this.getIsChannelEnabled("noise")) {
       return;
     }
@@ -529,10 +636,21 @@ export class Tracker {
     }
 
     if (!isContinue(cell.volume)) {
+      this.channels.noise.gainNode.gain.cancelScheduledValues(time);
       this.channels.noise.gainNode.gain.setValueAtTime(
         getVolume(cell.volume),
         time
       );
+
+      if (!isContinue(cell.envelope)) {
+        this.scheduleVolumeEnvelope(
+          this.channels.noise.gainNode,
+          cell.volume,
+          cell.envelope,
+          time,
+          false
+        );
+      }
     }
   }
 

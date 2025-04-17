@@ -1,4 +1,3 @@
-// import { App } from "@/App";
 import { ActivePanel } from "@/components/active-panel";
 import { Editor } from "@/components/editor";
 import { GlobalControls } from "@/components/global-controls";

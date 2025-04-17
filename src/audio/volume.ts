@@ -32,7 +32,9 @@ export function getVolume(volumeString: string) {
 
 export type WaveVolumeLevel = 0 | 0.25 | 0.5 | 1;
 
-const waveVolumeMap = new Map<string, number>([
+export const WAVE_VOLUME_KEYS = ["OF", "LO", "MD", "HI"] as const;
+
+export const waveVolumeMap = new Map<string, number>([
   ["OF", 0],
   ["LO", 0.25],
   ["MD", 0.5],
