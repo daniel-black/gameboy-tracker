@@ -4,8 +4,8 @@ import { Label } from "./ui/label";
 import { useChannel } from "@/hooks/use-channel";
 
 const channelLabels: Record<ChannelType, string> = {
-  pulse1: "Pulse Wave 1",
-  pulse2: "Pulse Wave 2",
+  pulse1: "Pulse 1",
+  pulse2: "Pulse 2",
   wave: "Wave",
   noise: "Noise",
 };
@@ -21,7 +21,7 @@ export function ChannelLabel(props: { channel: ChannelType }) {
         checked={isChannelEnabled}
         onCheckedChange={toggleChannel}
       />
-      <Label htmlFor={toggleId} className="text-xs">
+      <Label htmlFor={toggleId} className="text-xs whitespace-nowrap">
         {channelLabels[props.channel]}
       </Label>
     </div>

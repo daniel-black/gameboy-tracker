@@ -2,19 +2,19 @@ import { nanoid } from "nanoid";
 import {
   CHANNELS,
   DEFAULT_BPM,
+  ENVELOPE_TICKS_PER_ROW,
+  MAX_FREQUENCY,
   MAX_PATTERNS,
+  MIN_FREQUENCY,
   ROWS_PER_BEAT,
   ROWS_PER_PATTERN,
+  SWEEP_TICKS_PER_ROW,
 } from "./constants";
 import {
   createDefaultPulse1Cell,
   createDefaultPulse2Cell,
   createDefaultNoiseCell,
   createDefaultWaveCell,
-  NoiseCell,
-  Pulse1Cell,
-  Pulse2Cell,
-  WaveCell,
   Cell,
 } from "./cell";
 import { TypedEventEmitter } from "./typed-event-emmiter";
@@ -22,12 +22,7 @@ import { getWaveShaperCurve } from "./wave-shaper";
 import { TrackerEventMap } from "./events";
 import { ChannelType, Channels, Pattern, PatternMetadata } from "./types";
 import { getFrequency } from "./notes";
-import {
-  getVolume,
-  getWaveVolume,
-  WAVE_VOLUME_KEYS,
-  waveVolumeMap,
-} from "./volume";
+import { getVolume, getWaveVolume, WAVE_VOLUME_KEYS } from "./volume";
 import { getRate } from "./rate";
 import { getDutyCycle } from "./duty-cycle";
 import { getWaveForm } from "./wave-form";
@@ -185,7 +180,7 @@ export class Tracker {
    * Gets the current beats per minute of the tracker
    * @returns The current BPM
    */
-  public getBpm() {
+  public getBpm(): number {
     return this.bpm;
   }
 
@@ -193,7 +188,7 @@ export class Tracker {
    * Sets the beats per minute of the tracker and emits a `changedBpm` event
    * @param bpm The new BPM to set
    */
-  public setBpm(bpm: number) {
+  public setBpm(bpm: number): void {
     this.bpm = bpm;
     this.emitter.emit("changedBpm", { bpm });
   }
@@ -223,19 +218,19 @@ export class Tracker {
    * Sets the current pattern to a specific pattern by id and emits a `changedCurrentPattern` event
    * @param id The id of the pattern to set as the current pattern
    */
-  public setCurrentPatternId(id: string) {
+  public setCurrentPatternId(id: string): void {
     this.currentPatternId = id;
     this.emitter.emit("changedCurrentPattern", { patternId: id });
   }
 
-  public deletePattern(id: string) {
+  public deletePattern(id: string): void {
     this.patterns.delete(id);
     this.patternOrder = this.patternOrder.filter(
       (patternId) => patternId !== id
     );
   }
 
-  public addPattern() {
+  public addPattern(): void {
     if (this.patterns.size >= MAX_PATTERNS) {
       return;
     }
@@ -254,7 +249,7 @@ export class Tracker {
    * @param channel Either "pulse1", "pulse2", "wave", or "noise"
    * @returns A boolean indicating whether the channel is enabled
    */
-  public getIsChannelEnabled(channel: ChannelType) {
+  public getIsChannelEnabled(channel: ChannelType): boolean {
     return this.channels[channel].gate.gain.value === 1;
   }
 
@@ -262,13 +257,45 @@ export class Tracker {
    * Toggles a channel on or off and emits a `toggledChannel` event
    * @param channel Either "pulse1", "pulse2", "wave", or "noise"
    */
-  public toggleChannel(channel: ChannelType) {
+  public toggleChannel(channel: ChannelType): void {
     const isEnabled = this.getIsChannelEnabled(channel);
-    this.channels[channel].gate.gain.value = isEnabled ? 0 : 1;
+    this.channels[channel].gate.gain.setValueAtTime(
+      isEnabled ? 0 : 1,
+      this.ctx.currentTime
+    );
     this.emitter.emit("toggledChannel", { channel, enabled: !isEnabled });
   }
 
-  public getCurrentPattern() {
+  /**
+   * Silences all channels except the specified channel.
+   * @param channel The channel to spotlight
+   */
+  public spotlightChannel(channel: ChannelType): void {
+    // BUG WITH DOUBLE CLICKING SPOTLIGHT BUTTON TWICE IN A ROW
+
+    // set gain for all channels EXCEPT for the specified channel to 0
+    for (let i = 0; i < CHANNELS.length; i++) {
+      // Make sure specified channel is enabled
+      if (CHANNELS[i] === channel && !this.getIsChannelEnabled(channel)) {
+        this.channels[channel].gate.gain.setValueAtTime(
+          1,
+          this.ctx.currentTime
+        );
+        this.emitter.emit("toggledChannel", { channel, enabled: true });
+      } else {
+        this.channels[CHANNELS[i]].gate.gain.setValueAtTime(
+          0,
+          this.ctx.currentTime
+        );
+        this.emitter.emit("toggledChannel", {
+          channel: CHANNELS[i],
+          enabled: false,
+        });
+      }
+    }
+  }
+
+  public getCurrentPattern(): Pattern {
     const currentPattern = this.patterns.get(this.getCurrentPatternId());
     if (!currentPattern) {
       throw new Error("no current pattern");
@@ -289,17 +316,17 @@ export class Tracker {
     };
   }
 
-  public getAllPatternsMetadata() {
+  public getAllPatternsMetadata(): Array<PatternMetadata> {
     return this.patternOrder.map((patternId) =>
       this.getPatternMetadata(patternId)
     );
   }
 
-  public getCurrentPatternId() {
+  public getCurrentPatternId(): string {
     return this.currentPatternId;
   }
 
-  public getCell<T extends ChannelType>(channel: T, row: number) {
+  public getCell<T extends ChannelType>(channel: T, row: number): Cell[T] {
     return this.getCurrentPattern().cells[channel][row] as Cell[T];
   }
 
@@ -307,7 +334,7 @@ export class Tracker {
     channel: T,
     row: number,
     newCell: Cell[T]
-  ) {
+  ): void {
     this.getCurrentPattern().cells[channel][row] = newCell;
     this.emitter.emit("changedCell", { channel, row });
   }
@@ -327,7 +354,7 @@ export class Tracker {
       startRow?: number;
       endRow?: number;
     } = {}
-  ) {
+  ): Promise<void> {
     if (!this.sourcesStarted) {
       this.startAllSources();
     }
@@ -392,7 +419,7 @@ export class Tracker {
   /**
    * Scheduler function that queues up notes to play
    */
-  private scheduler() {
+  private scheduler(): void {
     // Schedule notes until we're a bit ahead of current time
     while (this.nextNoteTime < this.ctx.currentTime + this.lookaheadTime) {
       // Schedule the current row
@@ -409,29 +436,20 @@ export class Tracker {
   /**
    * Schedule audio events for the current row at the specified time
    */
-  private scheduleRow(time: number) {
+  private scheduleRow(time: number): void {
     const currentPlaybackPattern = this.getPatternById(
       this.patternOrder[this.currentPlaybackPatternIndex]
     );
     if (!currentPlaybackPattern) return;
 
-    // Schedule each channel for this row
-    this.schedulePulse1Channel(
-      time,
-      currentPlaybackPattern.cells.pulse1[this.currentPlaybackRow]
-    );
-    this.schedulePulse2Channel(
-      time,
-      currentPlaybackPattern.cells.pulse2[this.currentPlaybackRow]
-    );
-    this.scheduleWaveChannel(
-      time,
-      currentPlaybackPattern.cells.wave[this.currentPlaybackRow]
-    );
-    this.scheduleNoiseChannel(
-      time,
-      currentPlaybackPattern.cells.noise[this.currentPlaybackRow]
-    );
+    // Schedule each channel
+    for (let i = 0; i < CHANNELS.length; i++) {
+      this.scheduleChannel(
+        CHANNELS[i],
+        time,
+        currentPlaybackPattern.cells[CHANNELS[i]][this.currentPlaybackRow]
+      );
+    }
 
     // Emit an event so the UI can update
     this.emitter.emit("changedPlaybackRow", {
@@ -447,13 +465,10 @@ export class Tracker {
     envelopeString: string,
     time: number,
     isWaveChannel: boolean
-  ) {
-    if (isContinue(envelopeString)) {
-      return;
-    }
+  ): void {
+    if (isContinue(envelopeString) || envelopeString.length !== 2) return;
 
-    const directionChar = envelopeString[0];
-    const stepChar = envelopeString[1];
+    const [directionChar, stepChar] = envelopeString;
 
     if (
       !["0", "1"].includes(directionChar) ||
@@ -463,201 +478,237 @@ export class Tracker {
     }
 
     const isIncreasing = directionChar === "1";
+
+    // Step speed determines how many ticks must pass before changing volume
+    // Higher step speed (like 5) means slower volume change
+    // Ex. 5 ticks need to pass before changing volume
     const stepSpeed = parseInt(stepChar, 10);
-    const rowDuration = this.calculateSecondsPerRow();
-    const numStepsInRow = Math.min(8 - stepSpeed, 7); // max 7 steps
-    const stepDuration = rowDuration / numStepsInRow;
-    let currentVolume = parseInt(initialVolumeString, 10);
+
+    const tickDuration = this.calculateSecondsPerRow() / ENVELOPE_TICKS_PER_ROW;
+    let tickCounter = 0;
 
     // wave envelope still a little broken i think
     if (isWaveChannel) {
-      let currentVolumeIndex = waveVolumeMap.get(initialVolumeString) || 0;
+      // c is index of ["OF", "LO", "MD", "HI"]
+      let indexOfVolumeCode = WAVE_VOLUME_KEYS.indexOf(initialVolumeString);
+      if (indexOfVolumeCode === -1) {
+        console.error("Invalid initial volume string:", initialVolumeString);
+        return;
+      }
 
-      for (let i = 0; i < numStepsInRow; i++) {
-        const stepTime = time + (i + 1) * stepDuration;
+      for (let i = 0; i < ENVELOPE_TICKS_PER_ROW; i++) {
+        tickCounter++;
+
+        if (tickCounter >= stepSpeed) {
+          tickCounter = 0; // reset tick counter
+
+          // Calculate next volume level based on direction
+          if (isIncreasing) {
+            indexOfVolumeCode = Math.min(3, indexOfVolumeCode + 1);
+          } else {
+            indexOfVolumeCode = Math.max(0, indexOfVolumeCode - 1);
+          }
+
+          const volume = getWaveVolume(WAVE_VOLUME_KEYS[indexOfVolumeCode]);
+          const tickTime = time + (i + 1) * tickDuration;
+
+          console.log(
+            `${WAVE_VOLUME_KEYS[indexOfVolumeCode]}\tv: ${volume.toFixed(3)}\tt: ${tickTime}`
+          );
+
+          // Apply the volume change
+          gainNode.gain.setValueAtTime(volume, tickTime);
+
+          // Stop if we've reached the volume limit
+          if (indexOfVolumeCode === 0 || indexOfVolumeCode === 3) {
+            break;
+          }
+        }
+      }
+
+      return;
+    }
+
+    let currentVolume = parseInt(initialVolumeString, 10);
+
+    for (let i = 0; i < ENVELOPE_TICKS_PER_ROW; i++) {
+      // only update volume when enough ticks have passed based on stepSpeed
+      tickCounter++;
+
+      if (tickCounter >= stepSpeed) {
+        tickCounter = 0; // reset tick counter
 
         // Calculate next volume level based on direction
         if (isIncreasing) {
-          currentVolumeIndex = Math.min(3, currentVolumeIndex + 1);
+          currentVolume = Math.min(15, currentVolume + 1);
         } else {
-          currentVolumeIndex = Math.max(0, currentVolumeIndex - 1);
+          currentVolume = Math.max(0, currentVolume - 1);
         }
 
-        // Get the wave volume string for this index
-        const volumeString = WAVE_VOLUME_KEYS[currentVolumeIndex];
-        const volumeValue = getWaveVolume(volumeString);
-        console.log(`volume: ${volumeValue} at ${stepTime}`);
-
         // Apply the volume change
-        gainNode.gain.setValueAtTime(volumeValue, stepTime);
+        const volumeValue = getVolume(currentVolume.toString());
+        const tickTime = time + (i + 1) * tickDuration;
+
+        gainNode.gain.setValueAtTime(volumeValue, tickTime);
 
         // Stop if we've reached the volume limit
-        if (currentVolumeIndex === 0 || currentVolumeIndex === 3) {
+        if (currentVolume === 0 || currentVolume === 15) {
           break;
         }
       }
+    }
+  }
 
+  private scheduleFrequencySweep(
+    source: OscillatorNode,
+    initialFrequency: number,
+    sweepString: string,
+    time: number
+  ): void {
+    if (isContinue(sweepString) || sweepString.length !== 3) return;
+
+    const [directionChar, speedChar, shiftChar] = sweepString;
+
+    if (
+      !["0", "1"].includes(directionChar) ||
+      !["1", "2", "3", "4", "5", "6", "7"].includes(speedChar) ||
+      !["1", "2", "3", "4", "5", "6", "7"].includes(shiftChar)
+    ) {
       return;
     }
 
-    for (let i = 0; i < numStepsInRow; i++) {
-      const stepTime = time + (i + 1) * stepDuration;
+    const isIncreasing = directionChar === "1";
+    const stepSpeed = parseInt(speedChar, 10);
+    const shift = parseInt(shiftChar, 10);
 
-      // Calculate next volume level based on direction
-      if (isIncreasing) {
-        currentVolume = Math.min(15, currentVolume + 1);
-      } else {
-        currentVolume = Math.max(0, currentVolume - 1);
-      }
+    const tickDuration = this.calculateSecondsPerRow() / SWEEP_TICKS_PER_ROW;
 
-      // Apply the volume change
-      const volumeValue = getVolume(currentVolume.toString());
-      gainNode.gain.setValueAtTime(volumeValue, stepTime);
+    let tickCounter = 0;
+    let currentFrequency = initialFrequency;
 
-      // Stop if we've reached the volume limit
-      if (currentVolume === 0 || currentVolume === 15) {
-        break;
+    for (let i = 0; i < SWEEP_TICKS_PER_ROW; i++) {
+      tickCounter++;
+
+      if (tickCounter >= stepSpeed) {
+        if (isIncreasing) {
+          currentFrequency = Math.min(
+            MAX_FREQUENCY,
+            currentFrequency + (currentFrequency >> shift)
+          );
+        } else {
+          currentFrequency = Math.max(
+            MIN_FREQUENCY,
+            currentFrequency - (currentFrequency >> shift)
+          );
+        }
+
+        const tickTime = time + (i + 1) * tickDuration;
+
+        source.frequency.setValueAtTime(currentFrequency, tickTime);
+
+        // Stop if we've reached the frequency limit
+        if (currentFrequency === 40 || currentFrequency === 20_000) {
+          break;
+        }
       }
     }
   }
 
-  private schedulePulse1Channel(time: number, cell: Pulse1Cell) {
-    // skip scheduling if the channel is disabled
-    if (!this.getIsChannelEnabled("pulse1")) {
-      return;
-    }
+  private scheduleChannel<T extends ChannelType>(
+    channel: T,
+    time: number,
+    cell: Cell[T]
+  ): void {
+    // Skip scheduling if the channel is disabled
+    if (!this.getIsChannelEnabled(channel)) return;
 
-    if (!isContinue(cell.note)) {
-      this.channels.pulse1.source.frequency.setValueAtTime(
-        getFrequency(cell.note),
+    // Handle note scheduling for all channels except noise
+    if (
+      channel !== "noise" &&
+      "frequency" in this.channels[channel].source &&
+      "note" in cell &&
+      !isContinue(cell.note)
+    ) {
+      const initialFrequency = getFrequency(cell.note);
+
+      this.channels[channel].source.frequency.setValueAtTime(
+        initialFrequency,
         time
       );
-    }
 
-    if (!isContinue(cell.volume)) {
-      // cancel any previous envelope automation
-      this.channels.pulse1.gainNode.gain.cancelScheduledValues(time);
-      this.channels.pulse1.gainNode.gain.setValueAtTime(
-        getVolume(cell.volume),
-        time
-      );
-
-      if (!isContinue(cell.envelope)) {
-        this.scheduleVolumeEnvelope(
-          this.channels.pulse1.gainNode,
-          cell.volume,
-          cell.envelope,
-          time,
-          false
+      if (channel === "pulse1" && "sweep" in cell && !isContinue(cell.sweep)) {
+        this.scheduleFrequencySweep(
+          this.channels.pulse1.source,
+          initialFrequency,
+          cell.sweep,
+          time
         );
       }
     }
 
-    if (!isContinue(cell.dutyCycle)) {
-      this.channels.pulse1.waveShaper.curve = getWaveShaperCurve(
-        getDutyCycle(cell.dutyCycle)
-      );
-    }
-  }
-
-  private schedulePulse2Channel(time: number, cell: Pulse2Cell) {
-    // skip scheduling if the channel is disabled
-    if (!this.getIsChannelEnabled("pulse2")) {
-      return;
-    }
-
-    if (!isContinue(cell.note)) {
-      this.channels.pulse2.source.frequency.setValueAtTime(
-        getFrequency(cell.note),
-        time
-      );
-    }
-
-    if (!isContinue(cell.volume)) {
-      this.channels.pulse2.gainNode.gain.setValueAtTime(
-        getVolume(cell.volume),
-        time
-      );
-    }
-
-    if (!isContinue(cell.dutyCycle)) {
-      this.channels.pulse2.waveShaper.curve = getWaveShaperCurve(
-        getDutyCycle(cell.dutyCycle)
-      );
-    }
-  }
-
-  private scheduleWaveChannel(time: number, cell: WaveCell) {
-    // skip scheduling if the channel is disabled
-    if (!this.getIsChannelEnabled("wave")) {
-      return;
-    }
-
-    if (!isContinue(cell.note)) {
-      this.channels.wave.source.frequency.setValueAtTime(
-        getFrequency(cell.note),
-        time
-      );
-    }
-
-    if (!isContinue(cell.volume)) {
-      this.channels.wave.gainNode.gain.cancelScheduledValues(time);
-      this.channels.wave.gainNode.gain.setValueAtTime(
-        getWaveVolume(cell.volume),
-        time
-      );
-
-      if (!isContinue(cell.envelope)) {
-        this.scheduleVolumeEnvelope(
-          this.channels.wave.gainNode,
-          cell.volume,
-          cell.envelope,
-          time,
-          true
-        );
-      }
-    }
-
-    if (!isContinue(cell.waveForm)) {
-      this.channels.wave.source.type = getWaveForm(cell.waveForm);
-    }
-  }
-
-  private scheduleNoiseChannel(time: number, cell: NoiseCell) {
-    if (!this.getIsChannelEnabled("noise")) {
-      return;
-    }
-
-    if (!isContinue(cell.rate)) {
+    // Handle playback rate (noise channel only)
+    if (channel === "noise" && "rate" in cell && !isContinue(cell.rate)) {
       this.channels.noise.source.playbackRate.setValueAtTime(
         getRate(cell.rate),
         time
       );
     }
 
-    if (!isContinue(cell.volume)) {
-      this.channels.noise.gainNode.gain.cancelScheduledValues(time);
-      this.channels.noise.gainNode.gain.setValueAtTime(
-        getVolume(cell.volume),
-        time
+    // Handle volume (all channels)
+    if ("volume" in cell && !isContinue(cell.volume)) {
+      this.channels[channel].gainNode.gain.cancelScheduledValues(time);
+
+      const initialVolume =
+        channel === "wave"
+          ? getWaveVolume(cell.volume)
+          : getVolume(cell.volume);
+      this.channels[channel].gainNode.gain.setValueAtTime(initialVolume, time);
+
+      console.log(
+        `${cell.volume}\tv: ${initialVolume.toFixed(3)}\tt: ${time.toFixed(3)}`
       );
 
-      if (!isContinue(cell.envelope)) {
+      // Handle envelope (all channels except pulse2)
+      if (
+        channel !== "pulse2" &&
+        "envelope" in cell &&
+        !isContinue(cell.envelope)
+      ) {
         this.scheduleVolumeEnvelope(
-          this.channels.noise.gainNode,
+          this.channels[channel].gainNode,
           cell.volume,
           cell.envelope,
           time,
-          false
+          channel === "wave"
         );
       }
+    }
+
+    // Handle duty cycle (pulse channels only)
+    if (
+      "waveShaper" in this.channels[channel] &&
+      "dutyCycle" in cell &&
+      !isContinue(cell.dutyCycle)
+    ) {
+      this.channels[channel].waveShaper.curve = getWaveShaperCurve(
+        getDutyCycle(cell.dutyCycle)
+      );
+    }
+
+    // Handle wave form (wave channel only)
+    if (
+      channel === "wave" &&
+      "waveForm" in cell &&
+      !isContinue(cell.waveForm)
+    ) {
+      this.channels.wave.source.type = getWaveForm(cell.waveForm);
     }
   }
 
   /**
    * Advance the playhead to the next row, handling pattern changes and looping
    */
-  private advancePlayhead() {
+  private advancePlayhead(): void {
     this.currentPlaybackRow++;
 
     // Check if we've reached the end of the current pattern's rows
@@ -692,7 +743,7 @@ export class Tracker {
   /**
    * Pause playback
    */
-  public async pause() {
+  public async pause(): Promise<void> {
     if (!this.isPlaying || this.isPaused) return;
 
     this.stopScheduler();
@@ -724,7 +775,7 @@ export class Tracker {
   /**
    * Resume paused playback
    */
-  public async resume() {
+  public async resume(): Promise<void> {
     if (!this.isPaused) return;
 
     try {
@@ -757,7 +808,7 @@ export class Tracker {
   /**
    * Stop playback completely
    */
-  public async stop() {
+  public async stop(): Promise<void> {
     if (!this.isPlaying && !this.isPaused) return;
 
     const row = this.currentPlaybackRow;
@@ -781,7 +832,7 @@ export class Tracker {
   /**
    * Helper to stop the scheduling interval
    */
-  private stopScheduler() {
+  private stopScheduler(): void {
     if (this.scheduleIntervalId !== null) {
       clearInterval(this.scheduleIntervalId);
       this.scheduleIntervalId = null;
@@ -789,7 +840,7 @@ export class Tracker {
     this.isPlaying = false;
   }
 
-  private silenceAllChannels() {
+  private silenceAllChannels(): void {
     CHANNELS.forEach((channel) => {
       // Cancel any scheduled future volume changes
       this.channels[channel].gainNode.gain.cancelScheduledValues(
@@ -825,7 +876,7 @@ export class Tracker {
    */
   public async playCurrentPattern(
     options: { startRow?: number; endRow?: number } = {}
-  ) {
+  ): Promise<void> {
     const currentPlaybackPatternIndex = this.patternOrder.indexOf(
       this.getCurrentPatternId()
     );
@@ -842,7 +893,7 @@ export class Tracker {
   /**
    * Play the entire song (all patterns in order)
    */
-  public async playSong() {
+  public async playSong(): Promise<void> {
     if (this.patternOrder.length === 0) return;
 
     await this.play({
@@ -856,7 +907,7 @@ export class Tracker {
   /**
    * Play a section of the current pattern
    */
-  public async playSection(startRow: number, endRow: number) {
+  public async playSection(startRow: number, endRow: number): Promise<void> {
     const currentPlaybackPatternIndex = this.patternOrder.indexOf(
       this.getCurrentPatternId()
     );
@@ -870,11 +921,11 @@ export class Tracker {
     });
   }
 
-  public getLooping() {
+  public getLooping(): boolean {
     return this.isLooping;
   }
 
-  public setLooping(isLooping: boolean) {
+  public setLooping(isLooping: boolean): void {
     this.isLooping = isLooping;
     this.emitter.emit("changedLooping", { isLooping });
   }
@@ -885,11 +936,11 @@ export class Tracker {
     }
   }
 
-  public getMasterVolume() {
+  public getMasterVolume(): number {
     return this.masterGainNode.gain.value;
   }
 
-  public setMasterVolume(volume: number) {
+  public setMasterVolume(volume: number): void {
     const clampedVolume = Math.max(0, Math.min(volume, 1)); // 0 to 1 range
     this.masterGainNode.gain.setValueAtTime(
       clampedVolume,
@@ -899,5 +950,5 @@ export class Tracker {
   }
 }
 
-// Create a single instance of the tracker
+// Create a single instance of the tracker and export it for use in the app
 export const tracker = new Tracker();

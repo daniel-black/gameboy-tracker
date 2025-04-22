@@ -3,13 +3,13 @@ const validDutyCycleValues = ["--", "12", "25", "50", "75"];
 type DutyCycleInputProps = {
   dutyCycle: string;
   setDutyCycle: (newDutyCycle: string) => void;
-  setNextCellAsActive?: () => void;
+  setAsActive?: () => void;
 };
 
-export function DutyCycleInput({
+export function DutyCycleInput2({
   dutyCycle,
   setDutyCycle,
-  setNextCellAsActive,
+  setAsActive,
 }: DutyCycleInputProps) {
   function handleDutyCycleChange(e: React.ChangeEvent<HTMLInputElement>) {
     if (e.target.value.length > 2) return;
@@ -52,11 +52,6 @@ export function DutyCycleInput({
         setDutyCycle("75");
       }
     }
-
-    if (setNextCellAsActive && e.key === "Tab" && !e.shiftKey) {
-      setNextCellAsActive();
-      return;
-    }
   }
 
   function handleDutyCycleBlur() {
@@ -77,6 +72,7 @@ export function DutyCycleInput({
       onChange={handleDutyCycleChange}
       onKeyDown={handleDutyCycleKeyDown}
       onBlur={handleDutyCycleBlur}
+      onFocus={setAsActive}
     />
   );
 }

@@ -1,11 +1,16 @@
 type WaveFormInputProps = {
   waveForm: string;
   setWaveForm: (newWaveForm: string) => void;
+  setAsActive: () => void;
 };
 
 const validWaveForms = ["---", "SIN", "SQR", "SAW", "TRI"];
 
-export function WaveFormInput({ waveForm, setWaveForm }: WaveFormInputProps) {
+export function WaveFormInput2({
+  waveForm,
+  setWaveForm,
+  setAsActive,
+}: WaveFormInputProps) {
   function handleWaveFormChange(e: React.ChangeEvent<HTMLInputElement>) {
     if (e.target.value.length > 3) return;
 
@@ -72,6 +77,7 @@ export function WaveFormInput({ waveForm, setWaveForm }: WaveFormInputProps) {
       onKeyDown={handleWaveFormKeyDown}
       onBlur={handleWaveFormBlur}
       pattern="^(SIN|SQR|SAW|TRI|---)$"
+      onFocus={setAsActive}
     />
   );
 }

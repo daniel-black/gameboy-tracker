@@ -2,28 +2,28 @@ import { NoiseCell, Pulse1Cell, Pulse2Cell, WaveCell } from "./cell";
 import { CHANNELS } from "./constants";
 
 export interface Channels {
-  pulse1: {
-    source: OscillatorNode;
-    waveShaper: WaveShaperNode;
-    gainNode: GainNode;
-    gate: GainNode;
-  };
-  pulse2: {
-    source: OscillatorNode;
-    gainNode: GainNode;
-    waveShaper: WaveShaperNode;
-    gate: GainNode;
-  };
-  wave: {
-    source: OscillatorNode;
-    gainNode: GainNode;
-    gate: GainNode;
-  };
-  noise: {
-    source: AudioBufferSourceNode;
-    gainNode: GainNode;
-    gate: GainNode;
-  };
+  pulse1: PulseChannel;
+  pulse2: PulseChannel;
+  wave: WaveChannel;
+  noise: NoiseChannel;
+}
+
+interface PulseChannel extends BaseChannel {
+  source: OscillatorNode;
+  waveShaper: WaveShaperNode;
+}
+
+interface WaveChannel extends BaseChannel {
+  source: OscillatorNode;
+}
+
+interface NoiseChannel extends BaseChannel {
+  source: AudioBufferSourceNode;
+}
+
+interface BaseChannel {
+  gainNode: GainNode;
+  gate: GainNode;
 }
 
 export interface Pattern {

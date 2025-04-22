@@ -81,9 +81,7 @@ export function Editor() {
                 // Fires when the entire row is selected and the user hits Enter
                 // onAction={() => console.log("action!")}
               >
-                <Cell className="border p-1 [data-focused=true]:font-bold">
-                  {rowHeader}
-                </Cell>
+                <Cell className="border p-1">{rowHeader}</Cell>
                 <Cell className="border p-1">
                   <Pulse1Cell row={rowIndex} />
                 </Cell>

@@ -1,6 +1,7 @@
 type EnvelopeInputProps = {
   envelope: string;
   setEnvelope: (newEnvelope: string) => void;
+  setAsActive: () => void;
 };
 
 // Allowed values:
@@ -9,7 +10,11 @@ type EnvelopeInputProps = {
 // Strings of length two starting with 1 means increase
 // Second char can be 0-7
 
-export function EnvelopeInput({ envelope, setEnvelope }: EnvelopeInputProps) {
+export function EnvelopeInput2({
+  envelope,
+  setEnvelope,
+  setAsActive,
+}: EnvelopeInputProps) {
   function handleEnvelopeChange(e: React.ChangeEvent<HTMLInputElement>) {
     if (e.target.value.length > 2) return;
 
@@ -79,6 +84,7 @@ export function EnvelopeInput({ envelope, setEnvelope }: EnvelopeInputProps) {
       onChange={handleEnvelopeChange}
       onKeyDown={handleEnvelopeKeyDown}
       onBlur={handleEnvelopeBlur}
+      onFocus={setAsActive}
     />
   );
 }

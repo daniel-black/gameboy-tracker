@@ -3,6 +3,8 @@ import { NoiseRateInput } from "./noise-rate-input";
 import { useCell } from "@/hooks/use-cell";
 import { EnvelopeInput } from "./envelope-input";
 
+// input count: 3
+
 export function NoiseCell(props: { row: number }) {
   const [cell, setCell] = useCell({ channel: "noise", row: props.row });
 

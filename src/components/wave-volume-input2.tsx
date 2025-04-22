@@ -3,9 +3,14 @@ const validWaveVolumes = ["--", "OF", "LO", "MD", "HI"];
 type WaveVolumeInputProps = {
   volume: string;
   setVolume: (newVolume: string) => void;
+  setAsActive: () => void;
 };
 
-export function WaveVolumeInput({ volume, setVolume }: WaveVolumeInputProps) {
+export function WaveVolumeInput2({
+  volume,
+  setVolume,
+  setAsActive,
+}: WaveVolumeInputProps) {
   // This may not actually ever run since the onKeyDown kinda overrides it
   function handleVolumeChange(e: React.ChangeEvent<HTMLInputElement>) {
     if (e.target.value.length > 2) return;
@@ -63,6 +68,7 @@ export function WaveVolumeInput({ volume, setVolume }: WaveVolumeInputProps) {
       onChange={handleVolumeChange}
       onKeyDown={handleVolumeKeyDown}
       onBlur={handleVolumeBlur}
+      onFocus={setAsActive}
     />
   );
 }

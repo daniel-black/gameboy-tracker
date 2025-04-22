@@ -12,12 +12,14 @@ export interface Pulse1Cell {
   volume: string;
   dutyCycle: string;
   envelope: string;
+  sweep: string;
 }
 
 export interface Pulse2Cell {
   note: string;
   volume: string;
   dutyCycle: string;
+  envelope: string;
 }
 
 export type WaveForm = (typeof WAVE_FORMS)[number];
@@ -26,7 +28,6 @@ export interface WaveCell {
   note: string;
   waveForm: string;
   volume: string;
-  envelope: string;
 }
 
 export interface NoiseCell {
@@ -41,6 +42,7 @@ export function createDefaultPulse1Cell(): Pulse1Cell {
     volume: "--",
     dutyCycle: "--",
     envelope: "--",
+    sweep: "---",
   };
 }
 
@@ -49,6 +51,7 @@ export function createDefaultPulse2Cell(): Pulse2Cell {
     note: "---",
     volume: "--",
     dutyCycle: "--",
+    envelope: "--",
   };
 }
 
@@ -57,7 +60,6 @@ export function createDefaultWaveCell(): WaveCell {
     note: "---",
     waveForm: "---",
     volume: "--",
-    envelope: "--",
   };
 }
 

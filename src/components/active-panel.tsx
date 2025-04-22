@@ -12,8 +12,8 @@ export function ActivePanel() {
   return (
     <Tabs defaultValue="pulse-wave-1" className="flex-1">
       <TabsList className="grid w-full grid-cols-4">
-        <TabsTrigger value="pulse-wave-1">Pulse Wave 1</TabsTrigger>
-        <TabsTrigger value="pulse-wave-2">Pulse Wave 2</TabsTrigger>
+        <TabsTrigger value="pulse-wave-1">Pulse 1</TabsTrigger>
+        <TabsTrigger value="pulse-wave-2">Pulse 2</TabsTrigger>
         <TabsTrigger value="wave">Wave</TabsTrigger>
         <TabsTrigger value="noise">Noise</TabsTrigger>
       </TabsList>

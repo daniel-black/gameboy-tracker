@@ -1,7 +1,7 @@
 import { TrackerEventMap } from "@/audio/events";
 import { tracker } from "@/audio/tracker";
 import { ChannelType } from "@/audio/types";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export function useChannel(channel: ChannelType) {
   const [isChannelEnabled, setIsChannelEnabled] = useState(
@@ -24,12 +24,18 @@ export function useChannel(channel: ChannelType) {
     };
   }, []);
 
-  function toggleChannel() {
+  function toggleChannel(): void {
     tracker.toggleChannel(channel);
   }
+
+  const spotlightChannel = useCallback(
+    (): void => tracker.spotlightChannel(channel),
+    [channel]
+  );
 
   return {
     isChannelEnabled,
     toggleChannel,
+    spotlightChannel,
   } as const;
 }

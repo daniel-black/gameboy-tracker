@@ -40,3 +40,11 @@ export const WAVE_FORMS = [
   "triangle",
   "---",
 ] as const;
+
+export const ENVELOPE_TICKS_PER_ROW = 8 as const;
+
+export const SWEEP_TICKS_PER_ROW = 16 as const;
+
+export const MAX_FREQUENCY = 20_000 as const;
+
+export const MIN_FREQUENCY = 40 as const;

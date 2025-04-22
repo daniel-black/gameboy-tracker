@@ -80,9 +80,10 @@ function isValidNoteInput(input: string): boolean {
 type NoteInputProps = {
   note: string;
   setNote: (value: string) => void;
+  setAsActive: () => void;
 };
 
-export function NoteInput({ note, setNote }: NoteInputProps) {
+export function NoteInput2({ note, setNote, setAsActive }: NoteInputProps) {
   function handleNoteChange(e: React.ChangeEvent<HTMLInputElement>) {
     const input = e.target.value.replace(/[^b]/g, (c) => c.toUpperCase());
 
@@ -147,6 +148,7 @@ export function NoteInput({ note, setNote }: NoteInputProps) {
       onChange={handleNoteChange}
       onKeyDown={handleNoteKeyDown}
       onBlur={handleNoteBlur}
+      onFocus={setAsActive}
     />
   );
 }

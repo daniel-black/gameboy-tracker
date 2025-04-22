@@ -23,9 +23,14 @@ const numberStrings = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
 type VolumeInputProps = {
   volume: string;
   setVolume: (newVolume: string) => void;
+  setAsActive: () => void;
 };
 
-export function VolumeInput({ volume, setVolume }: VolumeInputProps) {
+export function VolumeInput2({
+  volume,
+  setVolume,
+  setAsActive,
+}: VolumeInputProps) {
   function handleVolumeChange(e: React.ChangeEvent<HTMLInputElement>) {
     // Prevent more than 2 characters
     if (e.target.value.length > 2) return;
@@ -96,6 +101,7 @@ export function VolumeInput({ volume, setVolume }: VolumeInputProps) {
       onChange={handleVolumeChange}
       onKeyDown={handleVolumeKeyDown}
       onBlur={handleVolumeBlur}
+      onFocus={setAsActive}
     />
   );
 }
