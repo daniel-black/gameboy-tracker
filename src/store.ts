@@ -14,4 +14,18 @@ export const activeAtom = atom<{ row: number | null; col: number | null }>({
   col: null,
 });
 
-export const inputIndexAtom = atom<number | null>(null);
+type State = {
+  active: {
+    row: number | null;
+    col: number | null;
+  };
+  inputIndex: number | null;
+};
+
+export const stateAtom = atom<State>({
+  active: {
+    row: null,
+    col: null,
+  },
+  inputIndex: null,
+});

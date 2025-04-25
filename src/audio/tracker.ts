@@ -304,6 +304,16 @@ export class Tracker {
     return currentPattern;
   }
 
+  public getPatternCells(): Pattern["cells"] {
+    const currentPattern = this.getCurrentPattern();
+    return {
+      pulse1: currentPattern.cells.pulse1,
+      pulse2: currentPattern.cells.pulse2,
+      wave: currentPattern.cells.wave,
+      noise: currentPattern.cells.noise,
+    };
+  }
+
   private getPatternMetadata(patternId: string): PatternMetadata {
     const pattern = this.getPatternById(patternId);
     if (!pattern) {
