@@ -4,7 +4,7 @@ import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 
 export function Pulse1Expanded({ row }: { row: number }) {
-  const [cell, _] = useCell({ channel: "pulse1", row });
+  const [cell, _] = useCell({ row, col: 0 });
 
   return (
     <Card className="h-full">

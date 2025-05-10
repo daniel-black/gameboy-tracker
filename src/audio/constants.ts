@@ -19,11 +19,7 @@ export const DEFAULT_BPM = 120 as const;
  */
 export const MAX_PATTERNS = 64 as const;
 
-/**
- * The four channels of the tracker. `pulse1` and `pulse2` are square waves. `wave` can play a custom
- * 32 sample 4-bit waveform. `noise` can play white noise at a specified rate.
- */
-export const CHANNELS = ["pulse1", "pulse2", "wave", "noise"] as const;
+export const CHANNEL_INDICES = [0, 1, 2, 3] as const;
 
 /**
  * The maximum number of listeners allowed by the event emitter.

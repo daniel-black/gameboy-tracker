@@ -5,7 +5,7 @@ import { Input } from "./ui/input";
 import { WaveFormRadioGroup } from "./wave-form-radio-group";
 
 export function WaveExpanded({ row }: { row: number }) {
-  const [cell, _] = useCell({ channel: "wave", row });
+  const [cell, _] = useCell({ row, col: 2 });
 
   return (
     <Card className="h-full">

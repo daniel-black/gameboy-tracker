@@ -1,18 +1,12 @@
-import { ChannelType } from "@/audio/types";
+import { ChannelIndex } from "@/audio/types";
 import { Checkbox } from "./ui/checkbox";
 import { Label } from "./ui/label";
 import { useChannel } from "@/hooks/use-channel";
+import { getChannelName } from "@/lib/config";
 
-const channelLabels: Record<ChannelType, string> = {
-  pulse1: "Pulse 1",
-  pulse2: "Pulse 2",
-  wave: "Wave",
-  noise: "Noise",
-};
-
-export function ChannelLabel(props: { channel: ChannelType }) {
-  const toggleId = `${props.channel}-toggle`;
-  const { isChannelEnabled, toggleChannel } = useChannel(props.channel);
+export function ChannelLabel({ channelIndex }: { channelIndex: ChannelIndex }) {
+  const toggleId = `${channelIndex}-toggle`;
+  const { isChannelEnabled, toggleChannel } = useChannel(channelIndex);
 
   return (
     <div className="flex items-center gap-2 w-full">
@@ -22,7 +16,7 @@ export function ChannelLabel(props: { channel: ChannelType }) {
         onCheckedChange={toggleChannel}
       />
       <Label htmlFor={toggleId} className="text-xs whitespace-nowrap">
-        {channelLabels[props.channel]}
+        {getChannelName(channelIndex)}
       </Label>
     </div>
   );

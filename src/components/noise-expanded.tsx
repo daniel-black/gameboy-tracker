@@ -4,7 +4,7 @@ import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 
 export function NoiseExpanded({ row }: { row: number }) {
-  const [cell, _] = useCell({ channel: "noise", row });
+  const [cell, _] = useCell({ row, col: 3 });
 
   return (
     <Card className="h-full">

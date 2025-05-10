@@ -1,36 +1,31 @@
-import { Cell } from "@/audio/cell";
+import { UnifiedCell } from "@/audio/cell";
 import { TrackerEventMap } from "@/audio/events";
 import { tracker } from "@/audio/tracker";
-import { ChannelType } from "@/audio/types";
+import { ChannelIndex } from "@/audio/types";
 import { useCallback, useEffect, useState } from "react";
 
-type UseCellProps<T extends ChannelType> = {
-  channel: T;
+type UseCellProps = {
   row: number;
+  col: ChannelIndex;
 };
 
-export function useCell<T extends ChannelType>({
-  channel,
-  row,
-}: UseCellProps<T>) {
-  const [cell, setInternalCell] = useState<Cell[T]>(
-    tracker.getCell(channel, row)
+export function useCell({ row, col }: UseCellProps) {
+  const [cell, setInternalCell] = useState<UnifiedCell>(
+    tracker.getCellData(row, col)
   );
 
   useEffect(() => {
     const handleChangedCurrentPatternEvent = (
       _: TrackerEventMap["changedCurrentPattern"]
     ) => {
-      setInternalCell(tracker.getCell(channel, row));
+      setInternalCell(tracker.getCellData(row, col));
     };
 
     const handleChangedCellEvent = (
       eventData: TrackerEventMap["changedCell"]
     ) => {
-      if (eventData.channel === channel && eventData.row === row) {
-        setInternalCell(
-          tracker.getCell(eventData.channel, eventData.row) as Cell[T]
-        );
+      if (eventData.col === col && eventData.row === row) {
+        setInternalCell(tracker.getCellData(row, col));
       }
     };
 
@@ -47,13 +42,13 @@ export function useCell<T extends ChannelType>({
       );
       tracker.emitter.off("changedCell", handleChangedCellEvent);
     };
-  }, [channel, row]);
+  }, [row, col]);
 
   const setCell = useCallback(
-    (newCell: Cell[T]) => {
-      tracker.setCell(channel, row, newCell);
+    (newCell: UnifiedCell) => {
+      tracker.setCellData(row, col, newCell);
     },
-    [channel, row]
+    [row, col]
   );
 
   return [cell, setCell] as const;

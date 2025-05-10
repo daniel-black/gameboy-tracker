@@ -8,7 +8,7 @@ import { SweepInput } from "./sweep-input";
 // input count: 5
 
 export function Pulse1Cell(props: { row: number }) {
-  const [cell, setCell] = useCell({ channel: "pulse1", row: props.row });
+  const [cell, setCell] = useCell({ row: props.row, col: 0 });
 
   const setNote = (newNote: string) => setCell({ ...cell, note: newNote });
   const setVolume = (newVolume: string) =>
@@ -21,11 +21,18 @@ export function Pulse1Cell(props: { row: number }) {
 
   return (
     <div className="flex justify-around items-center gap-1">
-      <NoteInput note={cell.note} setNote={setNote} />
+      {cell.note && <NoteInput note={cell.note} setNote={setNote} />}
       <VolumeInput volume={cell.volume} setVolume={setVolume} />
-      <DutyCycleInput dutyCycle={cell.dutyCycle} setDutyCycle={setDutyCycle} />
-      <EnvelopeInput envelope={cell.envelope} setEnvelope={setEnvelope} />
-      <SweepInput sweep={cell.sweep} setSweep={setSweep} />
+      {cell.dutyCycle && (
+        <DutyCycleInput
+          dutyCycle={cell.dutyCycle}
+          setDutyCycle={setDutyCycle}
+        />
+      )}
+      {cell.envelope && (
+        <EnvelopeInput envelope={cell.envelope} setEnvelope={setEnvelope} />
+      )}
+      {cell.sweep && <SweepInput sweep={cell.sweep} setSweep={setSweep} />}
     </div>
   );
 }

@@ -7,7 +7,7 @@ import { EnvelopeInput } from "./envelope-input";
 // input count: 4
 
 export function Pulse2Cell(props: { row: number }) {
-  const [cell, setCell] = useCell({ channel: "pulse2", row: props.row });
+  const [cell, setCell] = useCell({ row: props.row, col: 1 });
 
   const setNote = (newNote: string) => setCell({ ...cell, note: newNote });
   const setVolume = (newVolume: string) =>
@@ -19,10 +19,17 @@ export function Pulse2Cell(props: { row: number }) {
 
   return (
     <div className="flex justify-around items-center gap-1">
-      <NoteInput note={cell.note} setNote={setNote} />
+      {cell.note && <NoteInput note={cell.note} setNote={setNote} />}
       <VolumeInput volume={cell.volume} setVolume={setVolume} />
-      <DutyCycleInput dutyCycle={cell.dutyCycle} setDutyCycle={setDutyCycle} />
-      <EnvelopeInput envelope={cell.envelope} setEnvelope={setEnvelope} />
+      {cell.dutyCycle && (
+        <DutyCycleInput
+          dutyCycle={cell.dutyCycle}
+          setDutyCycle={setDutyCycle}
+        />
+      )}
+      {cell.envelope && (
+        <EnvelopeInput envelope={cell.envelope} setEnvelope={setEnvelope} />
+      )}
     </div>
   );
 }

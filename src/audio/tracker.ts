@@ -1,6 +1,6 @@
 import { nanoid } from "nanoid";
 import {
-  CHANNELS,
+  CHANNEL_INDICES,
   DEFAULT_BPM,
   ENVELOPE_TICKS_PER_ROW,
   MAX_FREQUENCY,
@@ -10,17 +10,11 @@ import {
   ROWS_PER_PATTERN,
   SWEEP_TICKS_PER_ROW,
 } from "./constants";
-import {
-  createDefaultPulse1Cell,
-  createDefaultPulse2Cell,
-  createDefaultNoiseCell,
-  createDefaultWaveCell,
-  Cell,
-} from "./cell";
+import { createDefaultRow, UnifiedCell } from "./cell";
 import { TypedEventEmitter } from "./typed-event-emmiter";
 import { getWaveShaperCurve } from "./wave-shaper";
 import { TrackerEventMap } from "./events";
-import { ChannelType, Channels, Pattern, PatternMetadata } from "./types";
+import { ChannelIndex, Channels, Pattern, PatternMetadata, Row } from "./types";
 import { getFrequency } from "./notes";
 import { getVolume, getWaveVolume, WAVE_VOLUME_KEYS } from "./volume";
 import { getRate } from "./rate";
@@ -36,7 +30,7 @@ export class Tracker {
   private ctx: AudioContext;
   private masterGainNode: GainNode;
 
-  // Audio channels
+  // Audio channels: [pulse1, pulse2, wave, noise]
   private channels: Channels;
 
   // Pattern state
@@ -99,8 +93,8 @@ export class Tracker {
     }
 
     // Create the channels
-    this.channels = {
-      pulse1: {
+    this.channels = [
+      {
         source: new OscillatorNode(this.ctx, { type: "sawtooth" }),
         waveShaper: new WaveShaperNode(this.ctx, {
           curve: getWaveShaperCurve(0.5),
@@ -108,7 +102,7 @@ export class Tracker {
         gainNode: new GainNode(this.ctx, { gain: 0 }),
         gate: new GainNode(this.ctx, { gain: 1 }),
       },
-      pulse2: {
+      {
         source: new OscillatorNode(this.ctx, { type: "sawtooth" }),
         waveShaper: new WaveShaperNode(this.ctx, {
           curve: getWaveShaperCurve(0.5),
@@ -116,36 +110,30 @@ export class Tracker {
         gainNode: new GainNode(this.ctx, { gain: 0 }),
         gate: new GainNode(this.ctx, { gain: 1 }),
       },
-      wave: {
+      {
         source: new OscillatorNode(this.ctx, { type: "sine" }),
         gainNode: new GainNode(this.ctx, { gain: 0 }),
         gate: new GainNode(this.ctx, { gain: 1 }),
       },
-      noise: {
+      {
         source: new AudioBufferSourceNode(this.ctx, { buffer, loop: true }),
         gainNode: new GainNode(this.ctx, { gain: 0 }),
         gate: new GainNode(this.ctx, { gain: 1 }),
       },
-    };
+    ];
 
-    // Configure the channels and connect the audio nodes
-    this.channels.pulse1.source.connect(this.channels.pulse1.waveShaper);
-    this.channels.pulse1.waveShaper.connect(this.channels.pulse1.gainNode);
-    this.channels.pulse1.gainNode.connect(this.channels.pulse1.gate);
-    this.channels.pulse1.gate.connect(this.masterGainNode);
+    // Connect the nodes in each channel
+    this.channels.forEach((channel) => {
+      if ("waveShaper" in channel) {
+        channel.source.connect(channel.waveShaper);
+        channel.waveShaper.connect(channel.gainNode);
+      } else {
+        channel.source.connect(channel.gainNode);
+      }
 
-    this.channels.pulse2.source.connect(this.channels.pulse2.waveShaper);
-    this.channels.pulse2.waveShaper.connect(this.channels.pulse2.gainNode);
-    this.channels.pulse2.gainNode.connect(this.channels.pulse2.gate);
-    this.channels.pulse2.gate.connect(this.masterGainNode);
-
-    this.channels.wave.source.connect(this.channels.wave.gainNode);
-    this.channels.wave.gainNode.connect(this.channels.wave.gate);
-    this.channels.wave.gate.connect(this.masterGainNode);
-
-    this.channels.noise.source.connect(this.channels.noise.gainNode);
-    this.channels.noise.gainNode.connect(this.channels.noise.gate);
-    this.channels.noise.gate.connect(this.masterGainNode);
+      channel.gainNode.connect(channel.gate);
+      channel.gate.connect(this.masterGainNode);
+    });
 
     // Set up patterns
     const initialPattern = this.createNewPattern("Pattern 1");
@@ -197,20 +185,7 @@ export class Tracker {
     return {
       name: name || `Pattern ${this.patterns.size + 1}`,
       id: nanoid(4),
-      cells: {
-        pulse1: Array.from({ length: ROWS_PER_PATTERN }, () =>
-          createDefaultPulse1Cell()
-        ),
-        pulse2: Array.from({ length: ROWS_PER_PATTERN }, () =>
-          createDefaultPulse2Cell()
-        ),
-        wave: Array.from({ length: ROWS_PER_PATTERN }, () =>
-          createDefaultWaveCell()
-        ),
-        noise: Array.from({ length: ROWS_PER_PATTERN }, () =>
-          createDefaultNoiseCell()
-        ),
-      },
+      data: Array.from({ length: ROWS_PER_PATTERN }, createDefaultRow),
     };
   }
 
@@ -249,50 +224,46 @@ export class Tracker {
    * @param channel Either "pulse1", "pulse2", "wave", or "noise"
    * @returns A boolean indicating whether the channel is enabled
    */
-  public getIsChannelEnabled(channel: ChannelType): boolean {
-    return this.channels[channel].gate.gain.value === 1;
+  public getIsChannelEnabled(channelIndex: ChannelIndex): boolean {
+    return this.channels[channelIndex].gate.gain.value === 1;
   }
 
   /**
    * Toggles a channel on or off and emits a `toggledChannel` event
    * @param channel Either "pulse1", "pulse2", "wave", or "noise"
    */
-  public toggleChannel(channel: ChannelType): void {
-    const isEnabled = this.getIsChannelEnabled(channel);
-    this.channels[channel].gate.gain.setValueAtTime(
+  public toggleChannel(channelIndex: ChannelIndex): void {
+    const isEnabled = this.getIsChannelEnabled(channelIndex);
+    this.channels[channelIndex].gate.gain.setValueAtTime(
       isEnabled ? 0 : 1,
       this.ctx.currentTime
     );
-    this.emitter.emit("toggledChannel", { channel, enabled: !isEnabled });
+    this.emitter.emit("toggledChannel", {
+      channelIndex,
+      enabled: !isEnabled,
+    });
   }
 
   /**
    * Silences all channels except the specified channel.
    * @param channel The channel to spotlight
    */
-  public spotlightChannel(channel: ChannelType): void {
-    // BUG WITH DOUBLE CLICKING SPOTLIGHT BUTTON TWICE IN A ROW
-
-    // set gain for all channels EXCEPT for the specified channel to 0
-    for (let i = 0; i < CHANNELS.length; i++) {
-      // Make sure specified channel is enabled
-      if (CHANNELS[i] === channel && !this.getIsChannelEnabled(channel)) {
-        this.channels[channel].gate.gain.setValueAtTime(
-          1,
-          this.ctx.currentTime
-        );
-        this.emitter.emit("toggledChannel", { channel, enabled: true });
-      } else {
-        this.channels[CHANNELS[i]].gate.gain.setValueAtTime(
-          0,
-          this.ctx.currentTime
-        );
+  public spotlightChannel(channelIndex: ChannelIndex): void {
+    CHANNEL_INDICES.forEach((i) => {
+      // Silence all channels except the specified one
+      if (i !== channelIndex) {
+        this.channels[i].gate.gain.setValueAtTime(0, this.ctx.currentTime);
         this.emitter.emit("toggledChannel", {
-          channel: CHANNELS[i],
+          channelIndex: i,
           enabled: false,
         });
       }
-    }
+      // Enable the specified channel
+      else {
+        this.channels[i].gate.gain.setValueAtTime(1, this.ctx.currentTime);
+        this.emitter.emit("toggledChannel", { channelIndex: i, enabled: true });
+      }
+    });
   }
 
   public getCurrentPattern(): Pattern {
@@ -304,14 +275,8 @@ export class Tracker {
     return currentPattern;
   }
 
-  public getPatternCells(): Pattern["cells"] {
-    const currentPattern = this.getCurrentPattern();
-    return {
-      pulse1: currentPattern.cells.pulse1,
-      pulse2: currentPattern.cells.pulse2,
-      wave: currentPattern.cells.wave,
-      noise: currentPattern.cells.noise,
-    };
+  public getPatternData(): Array<Row> {
+    return this.getCurrentPattern().data;
   }
 
   private getPatternMetadata(patternId: string): PatternMetadata {
@@ -336,24 +301,17 @@ export class Tracker {
     return this.currentPatternId;
   }
 
-  public getCell<T extends ChannelType>(channel: T, row: number): Cell[T] {
-    return this.getCurrentPattern().cells[channel][row] as Cell[T];
+  public getCellData(row: number, col: ChannelIndex): UnifiedCell {
+    return this.getCurrentPattern().data[row][col];
   }
 
-  public setCell<T extends ChannelType>(
-    channel: T,
-    row: number,
-    newCell: Cell[T]
-  ): void {
-    this.getCurrentPattern().cells[channel][row] = newCell;
-    this.emitter.emit("changedCell", { channel, row });
+  public setCellData(row: number, col: ChannelIndex, newCell: UnifiedCell) {
+    this.getCurrentPattern().data[row][col] = newCell;
+    this.emitter.emit("changedCell", { row, col });
   }
 
   private startAllSources() {
-    this.channels.pulse1.source.start();
-    this.channels.pulse2.source.start();
-    this.channels.wave.source.start();
-    this.channels.noise.source.start();
+    this.channels.forEach(({ source }) => source.start());
     this.sourcesStarted = true; // Prevent starting the sources multiple times
   }
 
@@ -453,13 +411,13 @@ export class Tracker {
     if (!currentPlaybackPattern) return;
 
     // Schedule each channel
-    for (let i = 0; i < CHANNELS.length; i++) {
+    CHANNEL_INDICES.forEach((channelIndex) =>
       this.scheduleChannel(
-        CHANNELS[i],
+        channelIndex,
         time,
-        currentPlaybackPattern.cells[CHANNELS[i]][this.currentPlaybackRow]
-      );
-    }
+        currentPlaybackPattern.data[this.currentPlaybackRow][channelIndex]
+      )
+    );
 
     // Emit an event so the UI can update
     this.emitter.emit("changedPlaybackRow", {
@@ -624,94 +582,90 @@ export class Tracker {
     }
   }
 
-  private scheduleChannel<T extends ChannelType>(
-    channel: T,
+  private scheduleChannel(
+    channelIndex: ChannelIndex,
     time: number,
-    cell: Cell[T]
+    cell: UnifiedCell
   ): void {
     // Skip scheduling if the channel is disabled
-    if (!this.getIsChannelEnabled(channel)) return;
+    if (!this.getIsChannelEnabled(channelIndex)) return;
+
+    const c = this.channels[channelIndex];
+
+    const isPulse1 = channelIndex === 0;
+    const isPulse2 = channelIndex === 1;
+    const isWave = channelIndex === 2;
+    const isNoise = channelIndex === 3;
 
     // Handle note scheduling for all channels except noise
     if (
-      channel !== "noise" &&
-      "frequency" in this.channels[channel].source &&
+      !isNoise && // not noise
+      c.source instanceof OscillatorNode &&
       "note" in cell &&
-      !isContinue(cell.note)
+      !isContinue(cell.note!)
     ) {
-      const initialFrequency = getFrequency(cell.note);
+      const initialFrequency = getFrequency(cell.note!);
 
-      this.channels[channel].source.frequency.setValueAtTime(
-        initialFrequency,
-        time
-      );
+      c.source.frequency.setValueAtTime(initialFrequency, time);
 
-      if (channel === "pulse1" && "sweep" in cell && !isContinue(cell.sweep)) {
+      if (isPulse1 && "sweep" in cell && !isContinue(cell.sweep!)) {
         this.scheduleFrequencySweep(
-          this.channels.pulse1.source,
+          this.channels[0].source,
           initialFrequency,
-          cell.sweep,
+          cell.sweep!,
           time
         );
       }
     }
 
     // Handle playback rate (noise channel only)
-    if (channel === "noise" && "rate" in cell && !isContinue(cell.rate)) {
-      this.channels.noise.source.playbackRate.setValueAtTime(
-        getRate(cell.rate),
+    if (isNoise && "rate" in cell && !isContinue(cell.rate!)) {
+      this.channels[3].source.playbackRate.setValueAtTime(
+        getRate(cell.rate!),
         time
       );
     }
 
     // Handle volume (all channels)
     if ("volume" in cell && !isContinue(cell.volume)) {
-      this.channels[channel].gainNode.gain.cancelScheduledValues(time);
+      c.gainNode.gain.cancelScheduledValues(time);
 
-      const initialVolume =
-        channel === "wave"
-          ? getWaveVolume(cell.volume)
-          : getVolume(cell.volume);
-      this.channels[channel].gainNode.gain.setValueAtTime(initialVolume, time);
+      const initialVolume = isWave
+        ? getWaveVolume(cell.volume)
+        : getVolume(cell.volume);
+      c.gainNode.gain.setValueAtTime(initialVolume, time);
 
       console.log(
         `${cell.volume}\tv: ${initialVolume.toFixed(3)}\tt: ${time.toFixed(3)}`
       );
 
       // Handle envelope (all channels except pulse2)
-      if (
-        channel !== "pulse2" &&
-        "envelope" in cell &&
-        !isContinue(cell.envelope)
-      ) {
+      if (!isPulse2 && "envelope" in cell && !isContinue(cell.envelope!)) {
         this.scheduleVolumeEnvelope(
-          this.channels[channel].gainNode,
+          c.gainNode,
           cell.volume,
-          cell.envelope,
+          cell.envelope!,
           time,
-          channel === "wave"
+          isWave
         );
       }
     }
 
     // Handle duty cycle (pulse channels only)
     if (
-      "waveShaper" in this.channels[channel] &&
+      (channelIndex === 0 || channelIndex === 1) &&
+      "waveShaper" in this.channels[channelIndex] &&
       "dutyCycle" in cell &&
-      !isContinue(cell.dutyCycle)
+      !isContinue(cell.dutyCycle!)
     ) {
-      this.channels[channel].waveShaper.curve = getWaveShaperCurve(
-        getDutyCycle(cell.dutyCycle)
+      this.channels[channelIndex].waveShaper.curve = getWaveShaperCurve(
+        getDutyCycle(cell.dutyCycle!)
       );
     }
 
     // Handle wave form (wave channel only)
-    if (
-      channel === "wave" &&
-      "waveForm" in cell &&
-      !isContinue(cell.waveForm)
-    ) {
-      this.channels.wave.source.type = getWaveForm(cell.waveForm);
+    if (isWave && "waveForm" in cell && !isContinue(cell.waveForm!)) {
+      this.channels[2].source.type = getWaveForm(cell.waveForm!);
     }
   }
 
@@ -851,28 +805,13 @@ export class Tracker {
   }
 
   private silenceAllChannels(): void {
-    CHANNELS.forEach((channel) => {
-      // Cancel any scheduled future volume changes
-      this.channels[channel].gainNode.gain.cancelScheduledValues(
-        this.ctx.currentTime
-      );
+    this.channels.forEach(({ gainNode, source }) => {
+      gainNode.gain.cancelScheduledValues(this.ctx.currentTime);
+      gainNode.gain.setValueAtTime(0, this.ctx.currentTime);
 
-      // Set gain to 0 for all channels
-      this.channels[channel].gainNode.gain.setValueAtTime(
-        0,
-        this.ctx.currentTime
-      );
-
-      // cancel scheduled values for oscillator node sources
-      if (channel !== "noise") {
-        this.channels[channel].source.frequency.cancelScheduledValues(
-          this.ctx.currentTime
-        );
-
-        this.channels[channel].source.frequency.setValueAtTime(
-          0,
-          this.ctx.currentTime
-        );
+      if (source instanceof OscillatorNode) {
+        source.frequency.cancelScheduledValues(this.ctx.currentTime);
+        source.frequency.setValueAtTime(0, this.ctx.currentTime);
       }
     });
   }

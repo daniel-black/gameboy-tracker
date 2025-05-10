@@ -1,3 +1,5 @@
+import React from "react";
+
 const NOTES = {
   SPECIAL: {
     OFF: "OFF",
@@ -80,40 +82,117 @@ function isValidNoteInput(input: string): boolean {
 type NoteInputProps = {
   note: string;
   setNote: (value: string) => void;
+  ref: React.Ref<HTMLInputElement>;
+  setFocus: () => void;
 };
 
-export function NoteInput({ note, setNote }: NoteInputProps) {
-  function handleNoteChange(e: React.ChangeEvent<HTMLInputElement>) {
+export function getHandleNoteChange(setValue: (newValue: string) => void) {
+  return (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Transform the input a little bit
     const input = e.target.value.replace(/[^b]/g, (c) => c.toUpperCase());
+    // console.log("note change input:", input);
 
-    if (isValidNoteInput(input)) {
-      if (input === "O") {
-        setNote(NOTES.SPECIAL.OFF);
-      } else if (input === "-") {
-        setNote(NOTES.SPECIAL.CONTINUE);
-      } else {
-        setNote(input);
-      }
+    if (!isValidNoteInput(input)) return;
+
+    if (input === "O") {
+      setValue(NOTES.SPECIAL.OFF);
+    } else if (input === "-") {
+      setValue(NOTES.SPECIAL.CONTINUE);
+    } else {
+      setValue(input);
     }
-  }
+  };
+}
 
-  function handleNoteKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+export function getHandleNoteKeyDown(
+  value: string,
+  setValue: (newValue: string) => void
+) {
+  return (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // console.log("note key down:", e.key);
+
     // Backspace on a special note should fully clear the input
-    if (e.key === "Backspace") {
-      if (note === NOTES.SPECIAL.CONTINUE || note === NOTES.SPECIAL.OFF) {
-        e.preventDefault();
-        setNote("");
-        return;
-      }
+    if (
+      e.key === "Backspace" &&
+      (value === NOTES.SPECIAL.CONTINUE || value === NOTES.SPECIAL.OFF)
+    ) {
+      e.preventDefault();
+      setValue("");
+      return;
     }
 
     // Start of a valid note should clear out special notes
-    if (NOTES.VALID_NOTE_CHARS.has(e.key.toUpperCase())) {
-      if (note === NOTES.SPECIAL.CONTINUE || note === NOTES.SPECIAL.OFF) {
-        e.preventDefault();
-        setNote(e.key.toUpperCase());
-        return;
-      }
+    if (
+      NOTES.VALID_NOTE_CHARS.has(e.key.toUpperCase()) &&
+      (value === NOTES.SPECIAL.CONTINUE || value === NOTES.SPECIAL.OFF)
+    ) {
+      e.preventDefault();
+      setValue(e.key.toUpperCase());
+      return;
+    }
+
+    // Entering "-" when a valid note is entered should set it to "---"
+    if (e.key === "-" && value.length === 3) {
+      setValue(NOTES.SPECIAL.CONTINUE);
+      return;
+    }
+
+    // Entering "O" when a valid note is entered should set it to "OFF"
+    if (e.key === "o" && value.length === 3) {
+      setValue(NOTES.SPECIAL.OFF);
+      return;
+    }
+  };
+}
+
+export function getHandleNoteBlur(
+  value: string,
+  setValue: (newValue: string) => void
+) {
+  return () => {
+    // console.log("note blur:", value);
+    if (value.length !== 3) {
+      setValue(NOTES.SPECIAL.CONTINUE);
+    }
+  };
+}
+
+export function NoteInput({ note, setNote, ref, setFocus }: NoteInputProps) {
+  function handleNoteChange(e: React.ChangeEvent<HTMLInputElement>) {
+    // Transform the input a little bit
+    const input = e.target.value.replace(/[^b]/g, (c) => c.toUpperCase());
+
+    if (!isValidNoteInput(input)) return;
+
+    if (input === "O") {
+      setNote(NOTES.SPECIAL.OFF);
+    } else if (input === "-") {
+      setNote(NOTES.SPECIAL.CONTINUE);
+    } else {
+      setNote(input);
+    }
+  }
+
+  //
+  function handleNoteKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    // Backspace on a special note should fully clear the input
+    if (
+      e.key === "Backspace" &&
+      (note === NOTES.SPECIAL.CONTINUE || note === NOTES.SPECIAL.OFF)
+    ) {
+      e.preventDefault();
+      setNote("");
+      return;
+    }
+
+    // Start of a valid note should clear out special notes
+    if (
+      NOTES.VALID_NOTE_CHARS.has(e.key.toUpperCase()) &&
+      (note === NOTES.SPECIAL.CONTINUE || note === NOTES.SPECIAL.OFF)
+    ) {
+      e.preventDefault();
+      setNote(e.key.toUpperCase());
+      return;
     }
 
     // Entering "-" when a valid note is entered should set it to "---"
@@ -138,6 +217,7 @@ export function NoteInput({ note, setNote }: NoteInputProps) {
 
   return (
     <input
+      ref={ref}
       type="text"
       maxLength={3}
       placeholder="⋅⋅⋅"
@@ -147,6 +227,7 @@ export function NoteInput({ note, setNote }: NoteInputProps) {
       onChange={handleNoteChange}
       onKeyDown={handleNoteKeyDown}
       onBlur={handleNoteBlur}
+      onFocus={setFocus}
     />
   );
 }

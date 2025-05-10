@@ -1,20 +1,6 @@
 import { atom } from "jotai";
 
-type SectionRange = {
-  start: number | null;
-  end: number | null;
-};
-
-export const sectionRangeAtom = atom<SectionRange>({ start: null, end: null });
-
-// If a cell is active, then both row and col are not null
-// If a row is active, then col is null and row is a number
-export const activeAtom = atom<{ row: number | null; col: number | null }>({
-  row: null,
-  col: null,
-});
-
-type State = {
+type ActiveState = {
   active: {
     row: number | null;
     col: number | null;
@@ -22,10 +8,20 @@ type State = {
   inputIndex: number | null;
 };
 
-export const stateAtom = atom<State>({
+export const activeStateAtom = atom<ActiveState>({
   active: {
     row: null,
     col: null,
   },
   inputIndex: null,
+});
+
+type SelectedState = {
+  start: number | null;
+  end: number | null;
+};
+
+export const selectedStateAtom = atom<SelectedState>({
+  start: null,
+  end: null,
 });

@@ -6,7 +6,7 @@ import { EnvelopeInput } from "./envelope-input";
 // input count: 3
 
 export function NoiseCell(props: { row: number }) {
-  const [cell, setCell] = useCell({ channel: "noise", row: props.row });
+  const [cell, setCell] = useCell({ row: props.row, col: 3 });
 
   const setVolume = (newVolume: string) =>
     setCell({ ...cell, volume: newVolume });
@@ -16,9 +16,11 @@ export function NoiseCell(props: { row: number }) {
 
   return (
     <div className="flex justify-around items-center gap-1">
-      <NoiseRateInput rate={cell.rate} setRate={setRate} />
+      {cell.rate && <NoiseRateInput rate={cell.rate} setRate={setRate} />}
       <VolumeInput volume={cell.volume} setVolume={setVolume} />
-      <EnvelopeInput envelope={cell.envelope} setEnvelope={setEnvelope} />
+      {cell.envelope && (
+        <EnvelopeInput envelope={cell.envelope} setEnvelope={setEnvelope} />
+      )}
     </div>
   );
 }

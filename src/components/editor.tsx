@@ -60,16 +60,16 @@ export function Editor() {
           <TableHeader className="sticky top-0 z-10 bg-background">
             <Column className="border h-8"></Column>
             <Column className="border px-2">
-              <ChannelLabel channel="pulse1" />
+              <ChannelLabel channelIndex={0} />
             </Column>
             <Column className="border px-2">
-              <ChannelLabel channel="pulse2" />
+              <ChannelLabel channelIndex={1} />
             </Column>
             <Column className="border px-2">
-              <ChannelLabel channel="wave" />
+              <ChannelLabel channelIndex={2} />
             </Column>
             <Column className="border px-2">
-              <ChannelLabel channel="noise" />
+              <ChannelLabel channelIndex={3} />
             </Column>
           </TableHeader>
           <TableBody className="text-xs">

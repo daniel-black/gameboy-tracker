@@ -1,4 +1,4 @@
-import { ChannelType } from "./types";
+import { ChannelIndex } from "./types";
 
 export interface TrackerEventMap {
   // Global control events
@@ -6,10 +6,10 @@ export interface TrackerEventMap {
   changedMasterVolume: { volume: number };
   changedLooping: { isLooping: boolean };
   changedCurrentPattern: { patternId: string };
-  toggledChannel: { channel: ChannelType; enabled: boolean };
+  toggledChannel: { channelIndex: ChannelIndex; enabled: boolean };
 
   // Editor events
-  changedCell: { channel: ChannelType; row: number };
+  changedCell: { row: number; col: ChannelIndex };
 
   // Playback events
   startedPlayback: { row: number; patternId: string };

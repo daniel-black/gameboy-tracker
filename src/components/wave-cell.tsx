@@ -6,7 +6,7 @@ import { useCell } from "@/hooks/use-cell";
 // input count: 3
 
 export function WaveCell(props: { row: number }) {
-  const [cell, setCell] = useCell({ channel: "wave", row: props.row });
+  const [cell, setCell] = useCell({ row: props.row, col: 2 });
 
   const setNote = (newNote: string) => setCell({ ...cell, note: newNote });
   const setVolume = (newVolume: string) =>
@@ -16,9 +16,11 @@ export function WaveCell(props: { row: number }) {
 
   return (
     <div className="flex justify-around items-center gap-1">
-      <NoteInput note={cell.note} setNote={setNote} />
+      {cell.note && <NoteInput note={cell.note} setNote={setNote} />}
       <WaveVolumeInput volume={cell.volume} setVolume={setVolume} />
-      <WaveFormInput waveForm={cell.waveForm} setWaveForm={setWaveForm} />
+      {cell.waveForm && (
+        <WaveFormInput waveForm={cell.waveForm} setWaveForm={setWaveForm} />
+      )}
     </div>
   );
 }

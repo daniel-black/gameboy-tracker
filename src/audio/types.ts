@@ -1,12 +1,7 @@
-import { NoiseCell, Pulse1Cell, Pulse2Cell, WaveCell } from "./cell";
-import { CHANNELS } from "./constants";
+import { CHANNEL_INDICES, WAVE_FORMS } from "./constants";
+import { UnifiedCell } from "./cell";
 
-export interface Channels {
-  pulse1: PulseChannel;
-  pulse2: PulseChannel;
-  wave: WaveChannel;
-  noise: NoiseChannel;
-}
+export type Channels = [PulseChannel, PulseChannel, WaveChannel, NoiseChannel];
 
 interface PulseChannel extends BaseChannel {
   source: OscillatorNode;
@@ -29,14 +24,13 @@ interface BaseChannel {
 export interface Pattern {
   id: string;
   name: string;
-  cells: {
-    pulse1: Array<Pulse1Cell>;
-    pulse2: Array<Pulse2Cell>;
-    wave: Array<WaveCell>;
-    noise: Array<NoiseCell>;
-  };
+  data: Array<Row>;
 }
 
-export type PatternMetadata = Omit<Pattern, "cells">;
+export type Row = [UnifiedCell, UnifiedCell, UnifiedCell, UnifiedCell];
 
-export type ChannelType = (typeof CHANNELS)[number];
+export type PatternMetadata = Omit<Pattern, "data">;
+
+export type ChannelIndex = (typeof CHANNEL_INDICES)[number];
+
+export type WaveForm = (typeof WAVE_FORMS)[number];

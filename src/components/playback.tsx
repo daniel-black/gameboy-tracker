@@ -3,7 +3,7 @@ import { PauseIcon, PlayIcon, SquareIcon } from "lucide-react";
 import { Loop } from "./loop";
 import { usePlayback } from "@/hooks/use-playback";
 import { useAtomValue } from "jotai";
-import { sectionRangeAtom } from "@/store";
+import { selectedStateAtom } from "@/store";
 import { Card, CardContent } from "./ui/card";
 
 export function Playback() {
@@ -21,7 +21,7 @@ export function Playback() {
   const isPlaying = playbackState === "playing";
   const isStopped = playbackState === "stopped";
 
-  const { start, end } = useAtomValue(sectionRangeAtom);
+  const { start, end } = useAtomValue(selectedStateAtom);
 
   return (
     <Card className="p-2 w-full">
