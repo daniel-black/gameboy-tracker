@@ -29,7 +29,6 @@
     "lucide-react": "^0.483.0",
     "nanoid": "^5.1.3",
     "react": "^19.0.0",
-    "react-aria-components": "^1.7.1",
     "react-dom": "^19.0.0",
     "tailwind-merge": "^3.0.2",
     "tailwindcss": "^4.0.12",

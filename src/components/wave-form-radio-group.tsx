@@ -1,16 +1,10 @@
-import { useCell } from "@/hooks/use-cell";
 import { Label } from "./ui/label";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { WaveForm } from "./wave-form";
-import { useAtomValue } from "jotai";
-import { sectionRangeAtom } from "@/store";
 
 export function WaveFormRadioGroup() {
-  const row = useAtomValue(sectionRangeAtom).start ?? 0;
-  const [cell, _] = useCell({ channel: "wave", row });
-
   return (
-    <RadioGroup value={cell.waveForm} className="flex gap-2">
+    <RadioGroup value={"sine"} className="flex gap-2">
       <div className="flex items-center space-x-2 border p-2 rounded-sm">
         <RadioGroupItem value="SIN" id="radio-sine" className="peer" />
         <Label

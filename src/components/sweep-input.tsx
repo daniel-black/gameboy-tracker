@@ -39,53 +39,6 @@ function isValidSweepInput(input: string): boolean {
   return false;
 }
 
-export function getHandleSweepChange(setSweep: (newSweep: string) => void) {
-  return (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (isValidSweepInput(e.target.value)) {
-      setSweep(e.target.value);
-    }
-  };
-}
-
-export function getHandleSweepKeyDown(
-  sweep: string,
-  setSweep: (newSweep: string) => void
-) {
-  return (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Handle special case: "-" key to set to continue
-    if (e.key === "-" && (sweep.length === 3 || sweep.length === 0)) {
-      e.preventDefault();
-      setSweep(SWEEP.CONTINUE);
-      return;
-    }
-
-    // Backspace on the continue value should fully clear it
-    if (e.key === "Backspace" && sweep === SWEEP.CONTINUE) {
-      e.preventDefault();
-      setSweep("");
-      return;
-    }
-
-    // When the user presses "0" or "1" while the value is "---", start a new sweep
-    if (sweep === SWEEP.CONTINUE && (e.key === "0" || e.key === "1")) {
-      e.preventDefault();
-      setSweep(e.key);
-      return;
-    }
-  };
-}
-
-export function getHandleSweepBlur(
-  sweep: string,
-  setSweep: (newSweep: string) => void
-) {
-  return () => {
-    if (sweep.length !== 3) {
-      setSweep(SWEEP.CONTINUE);
-    }
-  };
-}
-
 export function SweepInput({
   sweep,
   setSweep,
