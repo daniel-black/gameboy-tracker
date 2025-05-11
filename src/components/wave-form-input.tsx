@@ -71,7 +71,7 @@ export function WaveFormInput({
     <input
       ref={ref}
       type="text"
-      placeholder="⋅⋅⋅"
+      placeholder="___"
       maxLength={3}
       data-continue={waveForm === "---"}
       className="w-6 focus:outline-0 data-[continue=true]:text-muted-foreground"

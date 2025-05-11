@@ -151,10 +151,10 @@ export function EnvelopeInput({
     <input
       ref={ref}
       type="text"
-      placeholder="⋅⋅"
+      placeholder="__"
       maxLength={2}
       data-continue={envelope === "--"}
-      className="w-4 focus:outline-0 invalid:bg-red-200 data-[continue=true]:text-muted-foreground"
+      className="w-[26px] focus:outline-0 invalid:bg-red-200 data-[continue=true]:text-muted-foreground"
       value={envelope}
       onChange={handleEnvelopeChange}
       onKeyDown={handleEnvelopeKeyDown}

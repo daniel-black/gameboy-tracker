@@ -84,10 +84,10 @@ export function SweepInput({
     <input
       ref={ref}
       type="text"
-      placeholder="⋅⋅⋅"
+      placeholder="___"
       maxLength={3}
       data-continue={sweep === SWEEP.CONTINUE}
-      className="w-6 focus:outline-0 invalid:bg-red-200 data-[continue=true]:text-muted-foreground"
+      className="w-[37px] focus:outline-0 invalid:bg-red-200 data-[continue=true]:text-muted-foreground"
       value={sweep}
       onChange={handleSweepChange}
       onKeyDown={handleSweepKeyDown}

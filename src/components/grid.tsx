@@ -44,7 +44,7 @@ export function Grid() {
   // });
 
   const { currentPlaybackRow } = usePlayback();
-  console.log(currentPlaybackRow);
+  // console.log(currentPlaybackRow);
 
   // Set up all the refs for the rows, cells, and inputs
   const { rowRefs, cellRefs, inputRefs } = useMemo<TrackerRefs>(() => {
@@ -251,7 +251,7 @@ export function Grid() {
   return (
     <div className="h-screen overflow-hidden">
       <div className="h-full overflow-y-auto">
-        <table className="border border-collapse font-mono w-full">
+        <table className="border border-collapse w-full">
           <thead className="sticky top-0 z-10 bg-secondary">
             <tr className="select-none bg-secondary">
               <th className="border"></th>

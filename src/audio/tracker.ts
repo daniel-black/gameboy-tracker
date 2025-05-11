@@ -302,7 +302,10 @@ export class Tracker {
   }
 
   public getCellData(row: number, col: ChannelIndex): UnifiedCell {
-    return this.getCurrentPattern().data[row][col];
+    console.log(`TRACKER received: row: ${row}, col: ${col}`);
+    const value = this.getCurrentPattern().data[row][col];
+    console.log(`TRACKER returning: ${JSON.stringify(value)}`);
+    return value;
   }
 
   public setCellData(row: number, col: ChannelIndex, newCell: UnifiedCell) {

@@ -63,10 +63,10 @@ export function WaveVolumeInput({
     <input
       ref={ref}
       type="text"
-      placeholder="⋅⋅"
+      placeholder="__"
       maxLength={2}
       data-continue={volume === "--"}
-      className="w-4 focus:outline-0 data-[continue=true]:text-muted-foreground"
+      className="w-[26px] focus:outline-0 data-[continue=true]:text-muted-foreground"
       value={volume}
       onChange={handleVolumeChange}
       onKeyDown={handleVolumeKeyDown}

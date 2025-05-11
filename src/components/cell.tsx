@@ -15,7 +15,7 @@ export function Cell(props: {
       ref={props.ref}
       onClick={props.onClick}
     >
-      <div className="flex justify-around items-center gap-1 ">
+      <div className="flex justify-around items-center gap-2">
         {props.children}
       </div>
     </td>

@@ -14,6 +14,13 @@ export function useCell({ row, col }: UseCellProps) {
     tracker.getCellData(row, col)
   );
 
+  console.log({ input: { row, col }, output: cell });
+
+  // Update the state immediately when the row or col changes.
+  useEffect(() => {
+    setInternalCell(tracker.getCellData(row, col));
+  }, [row, col]);
+
   useEffect(() => {
     const handleChangedCurrentPatternEvent = (
       _: TrackerEventMap["changedCurrentPattern"]
