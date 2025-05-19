@@ -6,6 +6,8 @@ export interface TrackerEventMap {
   changedMasterVolume: { volume: number };
   changedLooping: { isLooping: boolean };
   changedCurrentPattern: { patternId: string };
+  addedPattern: { patternId: string };
+  deletedPattern: { patternId: string };
   toggledChannel: { channelIndex: ChannelIndex; enabled: boolean };
 
   // Editor events

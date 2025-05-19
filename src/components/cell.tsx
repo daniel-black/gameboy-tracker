@@ -10,7 +10,9 @@ export function Cell(props: {
     <td
       className={cn(
         "px-2 border",
-        props.isActive ? "bg-blue-200" : "bg-transparent"
+        props.isActive
+          ? "bg-secondary-foreground/75 text-primary-foreground"
+          : "bg-transparent"
       )}
       ref={props.ref}
       onClick={props.onClick}

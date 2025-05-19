@@ -69,7 +69,7 @@ export function DutyCycleInput({
       placeholder="__"
       maxLength={2}
       data-continue={dutyCycle === "--"}
-      className="w-[26px] focus:outline-0 invalid:bg-red-200 data-[continue=true]:text-muted-foreground"
+      className="w-[26px] focus:bg-primary focus:outline-0 invalid:bg-red-200 data-[continue=true]:text-muted-foreground"
       pattern="^(12|25|50|75|--)$"
       value={dutyCycle}
       onChange={handleDutyCycleChange}

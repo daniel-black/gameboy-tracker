@@ -18,6 +18,7 @@ import { SweepInput } from "./sweep-input";
 import { WaveFormInput } from "./wave-form-input";
 import { NoiseRateInput } from "./noise-rate-input";
 import { usePlayback } from "@/hooks/use-playback";
+import { usePatterns } from "@/hooks/use-patterns";
 
 const rowHeaders = Array.from({ length: ROWS_PER_PATTERN }, (_, i) =>
   i < 10 ? `0${i}` : i.toString()
@@ -34,6 +35,8 @@ type TrackerRefs = {
 export function Grid() {
   const [data, setData] = useState(tracker.getPatternData());
 
+  const { currentPatternId } = usePatterns();
+
   const [{ active, inputIndex }, setActive] = useAtom(activeStateAtom);
   const [selected, setSelected] = useAtom(selectedStateAtom);
   // console.log({
@@ -44,7 +47,10 @@ export function Grid() {
   // });
 
   const { currentPlaybackRow } = usePlayback();
-  // console.log(currentPlaybackRow);
+
+  useEffect(() => {
+    setData(tracker.getPatternData());
+  }, [currentPatternId]);
 
   // Set up all the refs for the rows, cells, and inputs
   const { rowRefs, cellRefs, inputRefs } = useMemo<TrackerRefs>(() => {
@@ -260,7 +266,7 @@ export function Grid() {
               ))}
             </tr>
           </thead>
-          <tbody className="text-xs">
+          <tbody className="text-xs" key={currentPatternId}>
             {rowHeaders.map((header, rowIndex) => {
               const isRowActive = active?.row === rowIndex;
               const isRowSelected =
@@ -279,8 +285,8 @@ export function Grid() {
                   data-selected={isRowSelected}
                   className={cn(
                     "group transition-colors duration-75",
-                    isRowSelected && !isRowActive && "bg-blue-100/80",
-                    isRowActive && "bg-blue-100",
+                    isRowSelected && !isRowActive && "bg-secondary/80",
+                    isRowActive && "bg-secondary",
                     isRowPlaying && "bg-orange-100"
                   )}
                 >

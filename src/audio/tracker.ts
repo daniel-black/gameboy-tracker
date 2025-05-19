@@ -200,9 +200,12 @@ export class Tracker {
 
   public deletePattern(id: string): void {
     this.patterns.delete(id);
+
     this.patternOrder = this.patternOrder.filter(
       (patternId) => patternId !== id
     );
+
+    this.emitter.emit("deletedPattern", { patternId: id });
   }
 
   public addPattern(): void {
@@ -214,9 +217,8 @@ export class Tracker {
 
     this.patterns.set(newPattern.id, newPattern);
     this.patternOrder.push(newPattern.id);
-    this.currentPatternId = newPattern.id;
 
-    this.emitter.emit("changedCurrentPattern", { patternId: newPattern.id });
+    this.emitter.emit("addedPattern", { patternId: newPattern.id });
   }
 
   /**
@@ -302,10 +304,7 @@ export class Tracker {
   }
 
   public getCellData(row: number, col: ChannelIndex): UnifiedCell {
-    console.log(`TRACKER received: row: ${row}, col: ${col}`);
-    const value = this.getCurrentPattern().data[row][col];
-    console.log(`TRACKER returning: ${JSON.stringify(value)}`);
-    return value;
+    return this.getCurrentPattern().data[row][col];
   }
 
   public setCellData(row: number, col: ChannelIndex, newCell: UnifiedCell) {
