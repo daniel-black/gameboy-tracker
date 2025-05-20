@@ -199,13 +199,23 @@ export class Tracker {
   }
 
   public deletePattern(id: string): void {
-    this.patterns.delete(id);
+    if (this.patterns.has(id) && this.patterns.size > 1) {
+      // Delete the pattern from the map
+      this.patterns.delete(id);
 
-    this.patternOrder = this.patternOrder.filter(
-      (patternId) => patternId !== id
-    );
+      // Remove the pattern from the order array
+      this.patternOrder = this.patternOrder.filter(
+        (patternId) => patternId !== id
+      );
 
-    this.emitter.emit("deletedPattern", { patternId: id });
+      // If the deleted pattern was the current pattern, set the first pattern as the current one
+      if (this.getCurrentPatternId() === id) {
+        const newCurrentPatternId = this.patternOrder[0];
+        this.setCurrentPatternId(newCurrentPatternId);
+      }
+
+      this.emitter.emit("deletedPattern", { patternId: id });
+    }
   }
 
   public addPattern(): void {
@@ -482,10 +492,6 @@ export class Tracker {
           const volume = getWaveVolume(WAVE_VOLUME_KEYS[indexOfVolumeCode]);
           const tickTime = time + (i + 1) * tickDuration;
 
-          console.log(
-            `${WAVE_VOLUME_KEYS[indexOfVolumeCode]}\tv: ${volume.toFixed(3)}\tt: ${tickTime}`
-          );
-
           // Apply the volume change
           gainNode.gain.setValueAtTime(volume, tickTime);
 
@@ -636,10 +642,6 @@ export class Tracker {
         ? getWaveVolume(cell.volume)
         : getVolume(cell.volume);
       c.gainNode.gain.setValueAtTime(initialVolume, time);
-
-      console.log(
-        `${cell.volume}\tv: ${initialVolume.toFixed(3)}\tt: ${time.toFixed(3)}`
-      );
 
       // Handle envelope (all channels except pulse2)
       if (!isPulse2 && "envelope" in cell && !isContinue(cell.envelope!)) {
