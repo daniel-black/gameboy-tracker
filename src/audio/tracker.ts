@@ -309,6 +309,10 @@ export class Tracker {
     );
   }
 
+  public getPatternOrder(): Array<string> {
+    return this.patternOrder;
+  }
+
   public getCurrentPatternId(): string {
     return this.currentPatternId;
   }

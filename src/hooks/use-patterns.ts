@@ -7,6 +7,8 @@ export function usePatterns() {
   const [currentPatternId, setCurrentPatternId] = useState(
     tracker.getCurrentPatternId()
   );
+
+  // patterns are in the correct pattern order (will be a problem here when we start allowing duplicates in the pattern order)
   const [patterns, setPatterns] = useState<Array<PatternMetadata>>(
     tracker.getAllPatternsMetadata()
   );
@@ -23,6 +25,7 @@ export function usePatterns() {
       _: TrackerEventMap["deletedPattern"]
     ) => {
       setPatterns(tracker.getAllPatternsMetadata());
+      setCurrentPatternId(tracker.getCurrentPatternId());
     };
 
     const handleChangedCurrentPatternEvent = (

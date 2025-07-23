@@ -47,3 +47,7 @@ export function Patterns() {
     </Card>
   );
 }
+
+// function EditablePatternName({ patternName }: { patternName: string }) {
+//   return <input type="text" val />
+// }
