@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "@fontsource/press-start-2p";
 
 :root {
   --radius: 0px;
@@ -83,6 +82,5 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: "Press Start 2P", system-ui;
   }
 }

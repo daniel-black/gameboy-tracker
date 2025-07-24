@@ -79,7 +79,7 @@ export function NoiseRateInput({
       type="text"
       placeholder="__"
       data-continue={rate === "--"}
-      className="w-[26px] focus:bg-primary focus:outline-0 data-[continue=true]:text-muted-foreground"
+      className="w-[16px] focus:bg-primary focus:outline-0 data-[continue=true]:text-muted-foreground"
       value={rate}
       onChange={handleRateChange}
       onKeyDown={handleRateKeyDown}

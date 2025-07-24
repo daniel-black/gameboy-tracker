@@ -98,7 +98,7 @@ export function VolumeInput({
       placeholder="__"
       maxLength={2}
       data-continue={volume === "--"}
-      className="w-[26px] focus:bg-primary focus:outline-0 invalid:bg-red-200 data-[continue=true]:text-muted-foreground"
+      className="w-[16px] focus:bg-primary focus:outline-0 invalid:bg-red-200 data-[continue=true]:text-muted-foreground"
       // TODO: Add pattern to validate volume input
       value={volume}
       onChange={handleVolumeChange}

@@ -74,7 +74,7 @@ export function WaveFormInput({
       placeholder="___"
       maxLength={3}
       data-continue={waveForm === "---"}
-      className="w-[37px] focus:bg-primary focus:outline-0 data-[continue=true]:text-muted-foreground"
+      className="w-[24px] focus:bg-primary focus:outline-0 data-[continue=true]:text-muted-foreground"
       value={waveForm}
       onChange={handleWaveFormChange}
       onKeyDown={handleWaveFormKeyDown}

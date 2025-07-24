@@ -150,7 +150,7 @@ export function NoteInput({ note, setNote, ref, setFocus }: NoteInputProps) {
       maxLength={3}
       placeholder="___"
       data-continue={note === NOTES.SPECIAL.CONTINUE}
-      className="w-[37px] focus:outline-0 focus:bg-primary invalid:bg-red-200 data-[continue=true]:text-muted-foreground"
+      className="w-[22px] focus:outline-0 focus:bg-primary invalid:bg-red-200 data-[continue=true]:text-muted-foreground"
       value={note}
       onChange={handleNoteChange}
       onKeyDown={handleNoteKeyDown}
